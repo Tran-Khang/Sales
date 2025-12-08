@@ -2,7 +2,10 @@
 const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
-const io = require("socket.io")(http);
+const io = require("socket.io")(http, {
+    cors: { origin: "*", methods: ["GET", "POST"] },
+    transports: ["polling"], // Force polling
+});
 const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -147,7 +150,12 @@ app.get("*", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Thêm vào cuối server.js, trước http.listen()
+module.exports = app;  // Export app cho Vercel
+
+if (require.main === module) {
+    http.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
 
 // Init DB tables (run once or use migrations)
 async function initDB() {
@@ -174,3 +182,4 @@ async function initDB() {
     `);
 }
 initDB();
+

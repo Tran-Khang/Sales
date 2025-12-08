@@ -1,6 +1,9 @@
 // app.js: Frontend JavaScript for API calls, auth, CRUD, realtime
 const API_URL = "/api"; // Assuming backend serves at same domain
-const socket = io(); // Socket.io for realtime
+const socket = io({
+    transports: ["polling"], // Bỏ 'websocket' để tránh lỗi 400
+    timeout: 20000, // 20 giây timeout
+});
 
 // Auth functions
 function login(email, password) {
@@ -232,3 +235,5 @@ document
     });
 
 // Repeat for order modal
+
+
