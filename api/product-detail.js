@@ -1,0 +1,104 @@
+const { query } = require("./db");
+const { verifyToken } = require("./auth");
+
+module.exports = async (req, res) => {
+    // Enable CORS
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+    res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization"
+    );
+
+    if (req.method === "OPTIONS") {
+        return res.status(200).end();
+    }
+
+    try {
+        verifyToken(req.headers.authorization);
+    } catch (error) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // GET /api/product-detail?id=123
+    if (req.method === "GET") {
+        try {
+            const { id } = req.query;
+
+            if (!id) {
+                return res.status(400).json({ error: "Thiếu ID sản phẩm" });
+            }
+
+            // Lấy thông tin sản phẩm
+            const productResult = await query(
+                "SELECT * FROM products WHERE id = $1",
+                [id]
+            );
+
+            if (productResult.rows.length === 0) {
+                return res
+                    .status(404)
+                    .json({ error: "Không tìm thấy sản phẩm" });
+            }
+
+            const product = productResult.rows[0];
+
+            // Tính tổng số lượng đã bán
+            const salesStatsResult = await query(
+                "SELECT COALESCE(SUM(quantity), 0) as total_sold, COALESCE(SUM(total), 0) as total_revenue FROM sales WHERE product_id = $1",
+                [id]
+            );
+
+            const salesStats = salesStatsResult.rows[0];
+
+            // Lấy danh sách các đơn hàng gần đây (10 đơn gần nhất)
+            const recentSalesResult = await query(
+                "SELECT * FROM sales WHERE product_id = $1 ORDER BY created_at DESC LIMIT 10",
+                [id]
+            );
+
+            // Xác định trạng thái tồn kho
+            let stockStatus = "OK";
+            let stockAlert = null;
+
+            if (product.stock === 0) {
+                stockStatus = "OUT_OF_STOCK";
+                stockAlert = "⚠️ HẾT HÀNG - Cần nhập thêm ngay!";
+            } else if (product.stock < 10) {
+                stockStatus = "LOW_STOCK";
+                stockAlert = "⚠️ SẮP HẾT - Tồn kho thấp!";
+            }
+
+            // Trả về dữ liệu đầy đủ
+            return res.status(200).json({
+                success: true,
+                data: {
+                    product: {
+                        id: product.id,
+                        name: product.name,
+                        price: parseFloat(product.price),
+                        stock: product.stock,
+                        created_at: product.created_at,
+                    },
+                    statistics: {
+                        total_sold: parseInt(salesStats.total_sold),
+                        total_revenue: parseFloat(salesStats.total_revenue),
+                        stock_status: stockStatus,
+                        stock_alert: stockAlert,
+                    },
+                    recent_sales: recentSalesResult.rows.map((sale) => ({
+                        id: sale.id,
+                        quantity: sale.quantity,
+                        total: parseFloat(sale.total),
+                        created_at: sale.created_at,
+                    })),
+                },
+            });
+        } catch (error) {
+            console.error("Get product detail error:", error);
+            return res.status(500).json({ error: "Lỗi server" });
+        }
+    }
+
+    return res.status(405).json({ error: "Method not allowed" });
+};

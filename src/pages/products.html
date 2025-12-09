@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Sản phẩm - Sales Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div id="navbar"></div>
+    
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">📦 Quản lý Sản phẩm</h1>
+            <button id="addProductBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-semibold transition">
+                ➕ Thêm sản phẩm
+            </button>
+        </div>
+        
+        <!-- Search Bar -->
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <input type="text" id="searchInput" placeholder="🔍 Tìm kiếm sản phẩm... (ví dụ: mì, sữa, bánh)" 
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        
+        <!-- Products List -->
+        <div id="productsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
+    
+    <!-- Add/Edit Product Modal -->
+    <div id="productModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h2 id="modalTitle" class="text-2xl font-bold mb-4">Thêm sản phẩm mới</h2>
+            <form id="productForm" class="space-y-4">
+                <input type="hidden" id="productId">
+                
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Tên sản phẩm</label>
+                    <input type="text" id="productName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Giá (VNĐ)</label>
+                    <input type="number" id="productPrice" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Số lượng tồn kho</label>
+                    <input type="number" id="productStock" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition">
+                        Lưu
+                    </button>
+                    <button type="button" id="cancelBtn" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-3 rounded-lg font-semibold transition">
+                        Hủy
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { checkAuth } from '../js/auth.js';
+        import { setupNavbar, formatCurrency, showNotification, showConfirm, showLoading } from '../js/ui.js';
+        import { getProducts, createProduct, updateProduct, deleteProduct, searchProducts } from '../js/api.js';
+        
+        await checkAuth();
+        setupNavbar('products');
+        
+        let currentProducts = [];
+        
+        // Load products
+        async function loadProducts(searchKeyword = '') {
+            showLoading('productsList');
+            try {
+                const data = await getProducts(searchKeyword);
+                currentProducts = data.products;
+                renderProducts(currentProducts);
+            } catch (error) {
+                showNotification('Lỗi tải danh sách sản phẩm', 'error');
+            }
+        }
+        
+        // Render products
+        function renderProducts(products) {
+            const container = document.getElementById('productsList');
+            
+            if (products.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-500">Không tìm thấy sản phẩm nào</div>';
+                return;
+            }
+            
+            container.innerHTML = products.map(product => {
+                const stockColor = product.stock === 0 ? 'text-red-600' : product.stock < 10 ? 'text-orange-600' : 'text-green-600';
+                const stockStatus = product.stock === 0 ? 'HẾT HÀNG' : product.stock < 10 ? 'SẮP HẾT' : 'CÒN HÀNG';
+                
+                return `
+                    <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition cursor-pointer" onclick="window.viewProduct(${product.id})">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold text-gray-800 flex-1">${product.name}</h3>
+                            <span class="${stockColor} font-semibold text-sm">${stockStatus}</span>
+                        </div>
+                        
+                        <div class="space-y-2 mb-4">
+                            <p class="text-2xl font-bold text-indigo-600">${formatCurrency(product.price)}</p>
+                            <p class="text-gray-600">Tồn kho: <span class="font-semibold ${stockColor}">${product.stock}</span></p>
+                        </div>
+                        
+                        <div class="flex space-x-2">
+                            <button onclick="event.stopPropagation(); window.editProduct(${product.id})" 
+                                    class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold transition">
+                                ✏️ Sửa
+                            </button>
+                            <button onclick="event.stopPropagation(); window.deleteProductHandler(${product.id})" 
+                                    class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-semibold transition">
+                                🗑️ Xóa
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Real-time search
+        let searchTimeout;
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                loadProducts(e.target.value);
+            }, 300);
+        });
+        
+        // View product detail
+        window.viewProduct = (id) => {
+            window.location.href = `/src/pages/product-detail.html?id=${id}`;
+        };
+        
+        // Modal controls
+        const modal = document.getElementById('productModal');
+        const addBtn = document.getElementById('addProductBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const form = document.getElementById('productForm');
+        
+        addBtn.addEventListener('click', () => {
+            document.getElementById('modalTitle').textContent = 'Thêm sản phẩm mới';
+            form.reset();
+            document.getElementById('productId').value = '';
+            modal.classList.remove('hidden');
+        });
+        
+        cancelBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+        
+        // Edit product
+        window.editProduct = (id) => {
+            const product = currentProducts.find(p => p.id === id);
+            if (product) {
+                document.getElementById('modalTitle').textContent = 'Chỉnh sửa sản phẩm';
+                document.getElementById('productId').value = product.id;
+                document.getElementById('productName').value = product.name;
+                document.getElementById('productPrice').value = product.price;
+                document.getElementById('productStock').value = product.stock;
+                modal.classList.remove('hidden');
+            }
+        };
+        
+        // Delete product
+        window.deleteProductHandler = async (id) => {
+            if (!showConfirm('Bạn có chắc muốn xóa sản phẩm này?')) return;
+            
+            try {
+                await deleteProduct(id);
+                showNotification('Xóa sản phẩm thành công');
+                loadProducts(document.getElementById('searchInput').value);
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        };
+        
+        // Save product (create or update)
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('productId').value;
+            const name = document.getElementById('productName').value;
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const stock = parseInt(document.getElementById('productStock').value);
+            
+            try {
+                if (id) {
+                    await updateProduct(id, name, price, stock);
+                    showNotification('Cập nhật sản phẩm thành công');
+                } else {
+                    await createProduct(name, price, stock);
+                    showNotification('Thêm sản phẩm thành công');
+                }
+                
+                modal.classList.add('hidden');
+                loadProducts(document.getElementById('searchInput').value);
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        });
+        
+        // Initial load
+        loadProducts();
+    </script>
+</body>
+</html>
