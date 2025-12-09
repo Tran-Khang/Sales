@@ -11,20 +11,20 @@ export function createNavbar(activePage = "") {
           <div class="flex items-center space-x-6">
             <h1 class="text-xl font-bold">🏪 Sales Management</h1>
             <div class="hidden md:flex space-x-4">
-              <a href="/src/pages/dashboard.html" class="hover:text-indigo-300 ${
+              <a href="/public/pages/dashboard.html" class="hover:text-indigo-300 ${
                   activePage === "dashboard"
                       ? "text-yellow-300 font-semibold"
                       : ""
               }">Dashboard</a>
-              <a href="/src/pages/products.html" class="hover:text-indigo-300 ${
+              <a href="/public/pages/products.html" class="hover:text-indigo-300 ${
                   activePage === "products"
                       ? "text-yellow-300 font-semibold"
                       : ""
               }">Sản phẩm</a>
-              <a href="/src/pages/sales.html" class="hover:text-indigo-300 ${
+              <a href="/public/pages/sales.html" class="hover:text-indigo-300 ${
                   activePage === "sales" ? "text-yellow-300 font-semibold" : ""
               }">Bán hàng</a>
-              <a href="/src/pages/reports.html" class="hover:text-indigo-300 ${
+              <a href="/public/pages/reports.html" class="hover:text-indigo-300 ${
                   activePage === "reports"
                       ? "text-yellow-300 font-semibold"
                       : ""
@@ -42,16 +42,16 @@ export function createNavbar(activePage = "") {
         
         <!-- Mobile menu -->
         <div class="md:hidden mt-3 flex space-x-3 overflow-x-auto">
-          <a href="/src/pages/dashboard.html" class="whitespace-nowrap hover:text-indigo-300 ${
+          <a href="/public/pages/dashboard.html" class="whitespace-nowrap hover:text-indigo-300 ${
               activePage === "dashboard" ? "text-yellow-300 font-semibold" : ""
           }">Dashboard</a>
-          <a href="/src/pages/products.html" class="whitespace-nowrap hover:text-indigo-300 ${
+          <a href="/public/pages/products.html" class="whitespace-nowrap hover:text-indigo-300 ${
               activePage === "products" ? "text-yellow-300 font-semibold" : ""
           }">Sản phẩm</a>
-          <a href="/src/pages/sales.html" class="whitespace-nowrap hover:text-indigo-300 ${
+          <a href="/public/pages/sales.html" class="whitespace-nowrap hover:text-indigo-300 ${
               activePage === "sales" ? "text-yellow-300 font-semibold" : ""
           }">Bán hàng</a>
-          <a href="/src/pages/reports.html" class="whitespace-nowrap hover:text-indigo-300 ${
+          <a href="/public/pages/reports.html" class="whitespace-nowrap hover:text-indigo-300 ${
               activePage === "reports" ? "text-yellow-300 font-semibold" : ""
           }">Báo cáo</a>
         </div>
