@@ -18,9 +18,9 @@
     </div>
 
     <script type="module">
-        import { checkAuth } from '../js/auth.js';
-        import { setupNavbar, formatCurrency, formatDate, showLoading } from '../js/ui.js';
-        import { getProductDetail } from '../js/api.js';
+        import { checkAuth } from "/src/js/auth.js";
+        import { setupNavbar, formatCurrency, formatDate, showLoading } from "/src/js/ui.js";
+        import { getProductDetail } from "/src/js/api.js";
         
         await checkAuth();
         setupNavbar('products');
@@ -30,7 +30,7 @@
         const productId = urlParams.get('id');
         
         if (!productId) {
-            window.location.href = '/src/pages/products.html';
+            window.location.href = '/pages/products.html';
         }
         
         // Load product detail
@@ -41,7 +41,6 @@
                 const result = await getProductDetail(productId);
                 const { product, statistics, recent_sales } = result.data;
                 
-                // Determine stock status badge
                 let statusBadge = '';
                 if (statistics.stock_status === 'OUT_OF_STOCK') {
                     statusBadge = '<span class="bg-red-500 text-white px-4 py-2 rounded-full font-semibold">🚫 HẾT HÀNG</span>';
@@ -53,6 +52,7 @@
                 
                 const html = `
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        
                         <!-- Product Info -->
                         <div class="lg:col-span-2 space-y-6">
                             <div class="bg-white rounded-lg shadow-md p-6">
@@ -68,12 +68,16 @@
                                     </div>
                                     <div>
                                         <p class="text-gray-500 text-sm">Tồn kho</p>
-                                        <p class="text-3xl font-bold ${statistics.stock_status === 'OUT_OF_STOCK' ? 'text-red-600' : statistics.stock_status === 'LOW_STOCK' ? 'text-orange-600' : 'text-green-600'}">
-                                            ${product.stock}
-                                        </p>
+                                        <p class="text-3xl font-bold ${
+                                            statistics.stock_status === 'OUT_OF_STOCK' 
+                                                ? 'text-red-600' 
+                                                : statistics.stock_status === 'LOW_STOCK'
+                                                ? 'text-orange-600'
+                                                : 'text-green-600'
+                                        }">${product.stock}</p>
                                     </div>
                                 </div>
-                                
+
                                 ${statistics.stock_alert ? `
                                     <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                                         <p class="text-red-700 font-semibold">${statistics.stock_alert}</p>
@@ -88,9 +92,10 @@
                             <!-- Recent Sales -->
                             <div class="bg-white rounded-lg shadow-md p-6">
                                 <h2 class="text-xl font-bold mb-4">📋 Lịch sử bán hàng gần đây</h2>
-                                ${recent_sales.length === 0 ? 
-                                    '<p class="text-gray-500">Chưa có đơn hàng nào</p>' :
-                                    `<div class="space-y-3">
+                                ${recent_sales.length === 0 
+                                    ? '<p class="text-gray-500">Chưa có đơn hàng nào</p>'
+                                    : `
+                                    <div class="space-y-3">
                                         ${recent_sales.map(sale => `
                                             <div class="flex justify-between items-center py-3 border-b">
                                                 <div>
@@ -102,15 +107,16 @@
                                                 </div>
                                             </div>
                                         `).join('')}
-                                    </div>`
-                                }
+                                    </div>
+                                `}
                             </div>
                         </div>
-                        
-                        <!-- Statistics -->
+
+                        <!-- Statistics Right Sidebar -->
                         <div class="space-y-6">
                             <div class="bg-white rounded-lg shadow-md p-6">
                                 <h2 class="text-xl font-bold mb-4">📊 Thống kê</h2>
+                                
                                 <div class="space-y-4">
                                     <div class="border-b pb-4">
                                         <p class="text-gray-500 text-sm mb-1">Tổng đã bán</p>
@@ -124,8 +130,20 @@
                                     
                                     <div>
                                         <p class="text-gray-500 text-sm mb-1">Trạng thái</p>
-                                        <p class="text-lg font-bold ${statistics.stock_status === 'OUT_OF_STOCK' ? 'text-red-600' : statistics.stock_status === 'LOW_STOCK' ? 'text-orange-600' : 'text-green-600'}">
-                                            ${statistics.stock_status === 'OUT_OF_STOCK' ? 'HẾT HÀNG' : statistics.stock_status === 'LOW_STOCK' ? 'SẮP HẾT' : 'CÒN HÀNG'}
+                                        <p class="text-lg font-bold ${
+                                            statistics.stock_status === 'OUT_OF_STOCK' 
+                                                ? 'text-red-600'
+                                                : statistics.stock_status === 'LOW_STOCK'
+                                                ? 'text-orange-600'
+                                                : 'text-green-600'
+                                        }">
+                                            ${
+                                                statistics.stock_status === 'OUT_OF_STOCK'
+                                                    ? 'HẾT HÀNG'
+                                                    : statistics.stock_status === 'LOW_STOCK'
+                                                    ? 'SẮP HẾT'
+                                                    : 'CÒN HÀNG'
+                                            }
                                         </p>
                                     </div>
                                 </div>
@@ -133,14 +151,16 @@
                             
                             <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg shadow-md p-6 text-white">
                                 <h3 class="text-lg font-bold mb-2">💡 Gợi ý</h3>
-                                ${statistics.stock_status === 'OUT_OF_STOCK' ? 
-                                    '<p class="text-sm">Sản phẩm đã hết hàng. Cần nhập thêm ngay!</p>' :
-                                    statistics.stock_status === 'LOW_STOCK' ?
-                                    '<p class="text-sm">Tồn kho đang thấp. Nên nhập thêm sớm.</p>' :
-                                    '<p class="text-sm">Tồn kho ổn định. Tiếp tục theo dõi.</p>'
+                                ${
+                                    statistics.stock_status === 'OUT_OF_STOCK'
+                                        ? '<p class="text-sm">Sản phẩm đã hết hàng. Cần nhập thêm ngay!</p>'
+                                        : statistics.stock_status === 'LOW_STOCK'
+                                        ? '<p class="text-sm">Tồn kho đang thấp. Nên nhập thêm sớm.</p>'
+                                        : '<p class="text-sm">Tồn kho ổn định. Tiếp tục theo dõi.</p>'
                                 }
                             </div>
                         </div>
+
                     </div>
                 `;
                 
