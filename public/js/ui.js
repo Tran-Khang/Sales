@@ -1,9 +1,9 @@
-import { login, verifyToken } from "./api.js";
+import { login, verifyToken } from "/js/api.js";
 
-// Xử lý đăng nhập
 const loginForm = document.getElementById("loginForm");
 const errorMsg = document.getElementById("errorMsg");
 
+// LOGIN
 if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -13,14 +13,12 @@ if (loginForm) {
 
         try {
             errorMsg.classList.add("hidden");
-
             const result = await login(username, password);
 
-            // Lưu token vào localStorage
             localStorage.setItem("token", result.token);
             localStorage.setItem("user", JSON.stringify(result.user));
 
-            // CHUYỂN ĐÚNG — KHÔNG CÓ /public
+            // ✔ CHUẨN VERCEL
             window.location.href = "/pages/dashboard.html";
         } catch (error) {
             errorMsg.textContent = error.message;
@@ -29,7 +27,7 @@ if (loginForm) {
     });
 }
 
-// Kiểm tra authentication
+// CHECK AUTH
 export async function checkAuth() {
     const token = localStorage.getItem("token");
 
@@ -49,14 +47,15 @@ export async function checkAuth() {
     }
 }
 
-// Logout
+// LOGOUT
 export function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+
     window.location.href = "/pages/login.html";
 }
 
-// Lấy user hiện tại
+// GET CURRENT USER
 export function getCurrentUser() {
     const userStr = localStorage.getItem("user");
     return userStr ? JSON.parse(userStr) : null;

@@ -1,88 +1,104 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chi tiết Sản phẩm - Sales Management</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50">
-    <div id="navbar"></div>
-    
-    <div class="container mx-auto px-4 py-8">
-        <button onclick="window.history.back()" class="mb-4 text-indigo-600 hover:text-indigo-800 font-semibold">
-            ← Quay lại
-        </button>
-        
-        <div id="productDetail"></div>
-    </div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Chi tiết Sản phẩm - Sales Management</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-50">
+        <div id="navbar"></div>
 
-    <script type="module">
-        import { checkAuth } from "/src/js/auth.js";
-        import { setupNavbar, formatCurrency, formatDate, showLoading } from "/src/js/ui.js";
-        import { getProductDetail } from "/src/js/api.js";
-        
-        await checkAuth();
-        setupNavbar('products');
-        
-        // Get product ID from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const productId = urlParams.get('id');
-        
-        if (!productId) {
-            window.location.href = '/pages/products.html';
-        }
-        
-        // Load product detail
-        async function loadProductDetail() {
-            showLoading('productDetail');
-            
-            try {
-                const result = await getProductDetail(productId);
-                const { product, statistics, recent_sales } = result.data;
-                
-                let statusBadge = '';
-                if (statistics.stock_status === 'OUT_OF_STOCK') {
-                    statusBadge = '<span class="bg-red-500 text-white px-4 py-2 rounded-full font-semibold">🚫 HẾT HÀNG</span>';
-                } else if (statistics.stock_status === 'LOW_STOCK') {
-                    statusBadge = '<span class="bg-orange-500 text-white px-4 py-2 rounded-full font-semibold">⚠️ SẮP HẾT</span>';
-                } else {
-                    statusBadge = '<span class="bg-green-500 text-white px-4 py-2 rounded-full font-semibold">✅ CÒN HÀNG</span>';
-                }
-                
-                const html = `
+        <div class="container mx-auto px-4 py-8">
+            <button
+                onclick="window.history.back()"
+                class="mb-4 text-indigo-600 hover:text-indigo-800 font-semibold"
+            >
+                ← Quay lại
+            </button>
+
+            <div id="productDetail"></div>
+        </div>
+
+        <script type="module">
+            import { checkAuth } from "/js/auth.js";
+            import { setupNavbar } from "/js/ui.js";
+            import { getProductDetail } from "/js/api.js";
+
+            await checkAuth();
+            setupNavbar("products");
+
+            // Get product ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get("id");
+
+            if (!productId) {
+                window.location.href = "/pages/products.html";
+            }
+
+            // Load product detail
+            async function loadProductDetail() {
+                showLoading("productDetail");
+
+                try {
+                    const result = await getProductDetail(productId);
+                    const { product, statistics, recent_sales } = result.data;
+
+                    let statusBadge = "";
+                    if (statistics.stock_status === "OUT_OF_STOCK") {
+                        statusBadge =
+                            '<span class="bg-red-500 text-white px-4 py-2 rounded-full font-semibold">🚫 HẾT HÀNG</span>';
+                    } else if (statistics.stock_status === "LOW_STOCK") {
+                        statusBadge =
+                            '<span class="bg-orange-500 text-white px-4 py-2 rounded-full font-semibold">⚠️ SẮP HẾT</span>';
+                    } else {
+                        statusBadge =
+                            '<span class="bg-green-500 text-white px-4 py-2 rounded-full font-semibold">✅ CÒN HÀNG</span>';
+                    }
+
+                    const html = `
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         
                         <!-- Product Info -->
                         <div class="lg:col-span-2 space-y-6">
                             <div class="bg-white rounded-lg shadow-md p-6">
                                 <div class="flex justify-between items-start mb-4">
-                                    <h1 class="text-3xl font-bold text-gray-800">${product.name}</h1>
+                                    <h1 class="text-3xl font-bold text-gray-800">${
+                                        product.name
+                                    }</h1>
                                     ${statusBadge}
                                 </div>
                                 
                                 <div class="grid grid-cols-2 gap-4 mb-6">
                                     <div>
                                         <p class="text-gray-500 text-sm">Giá bán</p>
-                                        <p class="text-3xl font-bold text-indigo-600">${formatCurrency(product.price)}</p>
+                                        <p class="text-3xl font-bold text-indigo-600">${formatCurrency(
+                                            product.price
+                                        )}</p>
                                     </div>
                                     <div>
                                         <p class="text-gray-500 text-sm">Tồn kho</p>
                                         <p class="text-3xl font-bold ${
-                                            statistics.stock_status === 'OUT_OF_STOCK' 
-                                                ? 'text-red-600' 
-                                                : statistics.stock_status === 'LOW_STOCK'
-                                                ? 'text-orange-600'
-                                                : 'text-green-600'
+                                            statistics.stock_status ===
+                                            "OUT_OF_STOCK"
+                                                ? "text-red-600"
+                                                : statistics.stock_status ===
+                                                  "LOW_STOCK"
+                                                ? "text-orange-600"
+                                                : "text-green-600"
                                         }">${product.stock}</p>
                                     </div>
                                 </div>
 
-                                ${statistics.stock_alert ? `
+                                ${
+                                    statistics.stock_alert
+                                        ? `
                                     <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                                         <p class="text-red-700 font-semibold">${statistics.stock_alert}</p>
                                     </div>
-                                ` : ''}
+                                `
+                                        : ""
+                                }
                                 
                                 <div class="text-sm text-gray-500">
                                     Ngày tạo: ${formatDate(product.created_at)}
@@ -92,23 +108,35 @@
                             <!-- Recent Sales -->
                             <div class="bg-white rounded-lg shadow-md p-6">
                                 <h2 class="text-xl font-bold mb-4">📋 Lịch sử bán hàng gần đây</h2>
-                                ${recent_sales.length === 0 
-                                    ? '<p class="text-gray-500">Chưa có đơn hàng nào</p>'
-                                    : `
+                                ${
+                                    recent_sales.length === 0
+                                        ? '<p class="text-gray-500">Chưa có đơn hàng nào</p>'
+                                        : `
                                     <div class="space-y-3">
-                                        ${recent_sales.map(sale => `
+                                        ${recent_sales
+                                            .map(
+                                                (sale) => `
                                             <div class="flex justify-between items-center py-3 border-b">
                                                 <div>
-                                                    <p class="font-semibold">Số lượng: ${sale.quantity}</p>
-                                                    <p class="text-sm text-gray-500">${formatDate(sale.created_at)}</p>
+                                                    <p class="font-semibold">Số lượng: ${
+                                                        sale.quantity
+                                                    }</p>
+                                                    <p class="text-sm text-gray-500">${formatDate(
+                                                        sale.created_at
+                                                    )}</p>
                                                 </div>
                                                 <div class="text-right">
-                                                    <p class="font-bold text-green-600">${formatCurrency(sale.total)}</p>
+                                                    <p class="font-bold text-green-600">${formatCurrency(
+                                                        sale.total
+                                                    )}</p>
                                                 </div>
                                             </div>
-                                        `).join('')}
+                                        `
+                                            )
+                                            .join("")}
                                     </div>
-                                `}
+                                `
+                                }
                             </div>
                         </div>
 
@@ -120,29 +148,37 @@
                                 <div class="space-y-4">
                                     <div class="border-b pb-4">
                                         <p class="text-gray-500 text-sm mb-1">Tổng đã bán</p>
-                                        <p class="text-2xl font-bold text-blue-600">${statistics.total_sold} sản phẩm</p>
+                                        <p class="text-2xl font-bold text-blue-600">${
+                                            statistics.total_sold
+                                        } sản phẩm</p>
                                     </div>
                                     
                                     <div class="border-b pb-4">
                                         <p class="text-gray-500 text-sm mb-1">Doanh thu</p>
-                                        <p class="text-2xl font-bold text-green-600">${formatCurrency(statistics.total_revenue)}</p>
+                                        <p class="text-2xl font-bold text-green-600">${formatCurrency(
+                                            statistics.total_revenue
+                                        )}</p>
                                     </div>
                                     
                                     <div>
                                         <p class="text-gray-500 text-sm mb-1">Trạng thái</p>
                                         <p class="text-lg font-bold ${
-                                            statistics.stock_status === 'OUT_OF_STOCK' 
-                                                ? 'text-red-600'
-                                                : statistics.stock_status === 'LOW_STOCK'
-                                                ? 'text-orange-600'
-                                                : 'text-green-600'
+                                            statistics.stock_status ===
+                                            "OUT_OF_STOCK"
+                                                ? "text-red-600"
+                                                : statistics.stock_status ===
+                                                  "LOW_STOCK"
+                                                ? "text-orange-600"
+                                                : "text-green-600"
                                         }">
                                             ${
-                                                statistics.stock_status === 'OUT_OF_STOCK'
-                                                    ? 'HẾT HÀNG'
-                                                    : statistics.stock_status === 'LOW_STOCK'
-                                                    ? 'SẮP HẾT'
-                                                    : 'CÒN HÀNG'
+                                                statistics.stock_status ===
+                                                "OUT_OF_STOCK"
+                                                    ? "HẾT HÀNG"
+                                                    : statistics.stock_status ===
+                                                      "LOW_STOCK"
+                                                    ? "SẮP HẾT"
+                                                    : "CÒN HÀNG"
                                             }
                                         </p>
                                     </div>
@@ -152,9 +188,10 @@
                             <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg shadow-md p-6 text-white">
                                 <h3 class="text-lg font-bold mb-2">💡 Gợi ý</h3>
                                 ${
-                                    statistics.stock_status === 'OUT_OF_STOCK'
+                                    statistics.stock_status === "OUT_OF_STOCK"
                                         ? '<p class="text-sm">Sản phẩm đã hết hàng. Cần nhập thêm ngay!</p>'
-                                        : statistics.stock_status === 'LOW_STOCK'
+                                        : statistics.stock_status ===
+                                          "LOW_STOCK"
                                         ? '<p class="text-sm">Tồn kho đang thấp. Nên nhập thêm sớm.</p>'
                                         : '<p class="text-sm">Tồn kho ổn định. Tiếp tục theo dõi.</p>'
                                 }
@@ -163,11 +200,10 @@
 
                     </div>
                 `;
-                
-                document.getElementById('productDetail').innerHTML = html;
-                
-            } catch (error) {
-                document.getElementById('productDetail').innerHTML = `
+
+                    document.getElementById("productDetail").innerHTML = html;
+                } catch (error) {
+                    document.getElementById("productDetail").innerHTML = `
                     <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
                         <p class="text-red-600 font-semibold">Lỗi: ${error.message}</p>
                         <button onclick="window.history.back()" class="mt-4 bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg">
@@ -175,10 +211,10 @@
                         </button>
                     </div>
                 `;
+                }
             }
-        }
-        
-        loadProductDetail();
-    </script>
-</body>
+
+            loadProductDetail();
+        </script>
+    </body>
 </html>

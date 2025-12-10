@@ -1,9 +1,9 @@
-import { login, verifyToken } from "./api.js";
+import { login, verifyToken } from "/js/api.js"; // ✔ FIXED
 
+// Xử lý đăng nhập
 const loginForm = document.getElementById("loginForm");
 const errorMsg = document.getElementById("errorMsg");
 
-// LOGIN
 if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -13,13 +13,15 @@ if (loginForm) {
 
         try {
             errorMsg.classList.add("hidden");
+
             const result = await login(username, password);
 
+            // Lưu token
             localStorage.setItem("token", result.token);
             localStorage.setItem("user", JSON.stringify(result.user));
 
-            // 🔥 Quan trọng: dùng đường dẫn tương đối
-            window.location.href = "./dashboard.html";
+            // Redirect đúng path Vercel
+            window.location.href = "/pages/dashboard.html";
         } catch (error) {
             errorMsg.textContent = error.message;
             errorMsg.classList.remove("hidden");
@@ -27,12 +29,12 @@ if (loginForm) {
     });
 }
 
-// CHECK AUTH
+// Kiểm tra login
 export async function checkAuth() {
     const token = localStorage.getItem("token");
 
     if (!token) {
-        window.location.href = "./login.html";
+        window.location.href = "/pages/login.html";
         return false;
     }
 
@@ -42,19 +44,19 @@ export async function checkAuth() {
     } catch (error) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        window.location.href = "./login.html";
+        window.location.href = "/pages/login.html";
         return false;
     }
 }
 
-// LOGOUT
+// Logout
 export function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    window.location.href = "./login.html";
+    window.location.href = "/pages/login.html";
 }
 
-// GET CURRENT USER
+// User hiện tại
 export function getCurrentUser() {
     const userStr = localStorage.getItem("user");
     return userStr ? JSON.parse(userStr) : null;

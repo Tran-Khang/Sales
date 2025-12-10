@@ -13,12 +13,14 @@
         <form id="loginForm" class="space-y-4">
             <div>
                 <label class="block text-gray-700 font-semibold mb-2">Tên đăng nhập</label>
-                <input type="text" id="username" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="admin" required>
+                <input type="text" id="username" class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                       placeholder="admin" required>
             </div>
             
             <div>
                 <label class="block text-gray-700 font-semibold mb-2">Mật khẩu</label>
-                <input type="password" id="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="admin123" required>
+                <input type="password" id="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                       placeholder="admin123" required>
             </div>
             
             <div id="errorMsg" class="text-red-600 text-sm hidden"></div>
@@ -27,13 +29,13 @@
                 Đăng nhập
             </button>
         </form>
-        
+
         <p class="text-center text-gray-500 text-sm mt-4">
             Demo: username = <strong>admin</strong>, password = <strong>admin123</strong>
         </p>
     </div>
 
-    <!-- ĐƯỜNG DẪN ĐÚNG CHO VERCEL -->
-    <script type="module" src="/src/js/auth.js"></script>
+    <!-- ĐƯỜNG DẪN ĐÚNG -->
+    <script type="module" src="/js/auth.js"></script>
 </body>
 </html>
