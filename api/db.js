@@ -1,29 +1,20 @@
-const { Pool } = require("pg");
+const { neon } = require("@neondatabase/serverless");
 
-// Tạo connection pool với Neon PostgreSQL
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false,
-    },
-});
+const sql = neon(process.env.DATABASE_URL);
 
-// Hàm query helper
-async function query(text, params) {
-    const start = Date.now();
+// Hàm query dùng serverless driver
+async function query(text, params = []) {
     try {
-        const res = await pool.query(text, params);
-        const duration = Date.now() - start;
-        console.log("Executed query", { text, duration, rows: res.rowCount });
-        return res;
+        // Thay $1, $2... bằng chuẩn serverless
+        const normalized = text.replace(/\$(\d+)/g, (_, i) => `$${i}`);
+
+        const rows = await sql(normalized)(params);
+
+        return { rows, rowCount: rows.length };
     } catch (error) {
-        console.error("Database query error:", error);
+        console.error("Neon serverless query error:", error);
         throw error;
     }
 }
 
-// Export pool và query function
-module.exports = {
-    query,
-    pool,
-};
+module.exports = { query };

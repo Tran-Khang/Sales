@@ -6,6 +6,24 @@ const JWT_SECRET =
     process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
 module.exports = async (req, res) => {
+    // ========= FIX: JSON PARSER =========
+    let raw = "";
+    await new Promise((resolve) => {
+        req.on("data", (c) => (raw += c));
+        req.on("end", resolve);
+    });
+
+    if (raw) {
+        try {
+            req.body = JSON.parse(raw);
+        } catch {
+            req.body = {};
+        }
+    } else {
+        req.body = {};
+    }
+    // ====================================
+
     // Enable CORS
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -14,9 +32,7 @@ module.exports = async (req, res) => {
         "Content-Type, Authorization"
     );
 
-    if (req.method === "OPTIONS") {
-        return res.status(200).end();
-    }
+    if (req.method === "OPTIONS") return res.status(200).end();
 
     // POST /api/auth - Login
     if (req.method === "POST") {
@@ -29,7 +45,6 @@ module.exports = async (req, res) => {
                     .json({ error: "Thiếu username hoặc password" });
             }
 
-            // Tìm user trong database
             const result = await query(
                 "SELECT * FROM users WHERE username = $1",
                 [username]
@@ -43,16 +58,13 @@ module.exports = async (req, res) => {
 
             const user = result.rows[0];
 
-            // Verify password
             const isValid = await bcrypt.compare(password, user.password);
-
             if (!isValid) {
                 return res
                     .status(401)
                     .json({ error: "Sai tên đăng nhập hoặc mật khẩu" });
             }
 
-            // Tạo JWT token
             const token = jwt.sign(
                 { userId: user.id, username: user.username },
                 JWT_SECRET,
@@ -95,7 +107,7 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: "Method not allowed" });
 };
 
-// Helper function để verify token trong các API khác
+// Export verifyToken for other APIs
 function verifyToken(authHeader) {
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
         throw new Error("Token không hợp lệ");

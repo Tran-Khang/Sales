@@ -10,9 +10,10 @@ module.exports = async (req, res) => {
         "Content-Type, Authorization"
     );
 
-    if (req.method === "OPTIONS") {
-        return res.status(200).end();
-    }
+    if (req.method === "OPTIONS") return res.status(200).end();
+
+    // FIX: Đảm bảo req.query tồn tại (tránh undefined trên Vercel)
+    req.query = req.query || {};
 
     try {
         verifyToken(req.headers.authorization);
@@ -29,7 +30,6 @@ module.exports = async (req, res) => {
                 return res.status(400).json({ error: "Thiếu ID sản phẩm" });
             }
 
-            // Lấy thông tin sản phẩm
             const productResult = await query(
                 "SELECT * FROM products WHERE id = $1",
                 [id]
@@ -43,25 +43,22 @@ module.exports = async (req, res) => {
 
             const product = productResult.rows[0];
 
-            // Tính tổng số lượng đã bán
-            const salesStatsResult = await query(
-                "SELECT COALESCE(SUM(quantity), 0) as total_sold, COALESCE(SUM(total), 0) as total_revenue FROM sales WHERE product_id = $1",
+            // Tổng bán
+            const stats = await query(
+                "SELECT COALESCE(SUM(quantity), 0) AS total_sold, COALESCE(SUM(total), 0) AS total_revenue FROM sales WHERE product_id = $1",
                 [id]
             );
 
-            const salesStats = salesStatsResult.rows[0];
-
-            // Lấy danh sách các đơn hàng gần đây (10 đơn gần nhất)
-            const recentSalesResult = await query(
+            // 10 đơn gần nhất
+            const recent = await query(
                 "SELECT * FROM sales WHERE product_id = $1 ORDER BY created_at DESC LIMIT 10",
                 [id]
             );
 
-            // Xác định trạng thái tồn kho
             let stockStatus = "OK";
             let stockAlert = null;
 
-            if (product.stock === 0) {
+            if (product.stock == 0) {
                 stockStatus = "OUT_OF_STOCK";
                 stockAlert = "⚠️ HẾT HÀNG - Cần nhập thêm ngay!";
             } else if (product.stock < 10) {
@@ -69,7 +66,6 @@ module.exports = async (req, res) => {
                 stockAlert = "⚠️ SẮP HẾT - Tồn kho thấp!";
             }
 
-            // Trả về dữ liệu đầy đủ
             return res.status(200).json({
                 success: true,
                 data: {
@@ -81,15 +77,15 @@ module.exports = async (req, res) => {
                         created_at: product.created_at,
                     },
                     statistics: {
-                        total_sold: parseInt(salesStats.total_sold),
-                        total_revenue: parseFloat(salesStats.total_revenue),
+                        total_sold: Number(stats.rows[0].total_sold),
+                        total_revenue: Number(stats.rows[0].total_revenue),
                         stock_status: stockStatus,
                         stock_alert: stockAlert,
                     },
-                    recent_sales: recentSalesResult.rows.map((sale) => ({
+                    recent_sales: recent.rows.map((sale) => ({
                         id: sale.id,
                         quantity: sale.quantity,
-                        total: parseFloat(sale.total),
+                        total: Number(sale.total),
                         created_at: sale.created_at,
                     })),
                 },

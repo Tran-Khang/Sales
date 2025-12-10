@@ -2,6 +2,24 @@ const { query } = require("./db");
 const { verifyToken } = require("./auth");
 
 module.exports = async (req, res) => {
+    // ============ JSON BODY PARSER (BẮT BUỘC CHO VERCEL) ============
+    let raw = "";
+    await new Promise((resolve) => {
+        req.on("data", (c) => (raw += c));
+        req.on("end", resolve);
+    });
+
+    if (raw) {
+        try {
+            req.body = JSON.parse(raw);
+        } catch {
+            req.body = {};
+        }
+    } else {
+        req.body = {};
+    }
+    // ================================================================
+
     // Enable CORS
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader(
@@ -13,9 +31,7 @@ module.exports = async (req, res) => {
         "Content-Type, Authorization"
     );
 
-    if (req.method === "OPTIONS") {
-        return res.status(200).end();
-    }
+    if (req.method === "OPTIONS") return res.status(200).end();
 
     try {
         // Verify authentication
@@ -24,7 +40,7 @@ module.exports = async (req, res) => {
         return res.status(401).json({ error: "Unauthorized" });
     }
 
-    // GET /api/products - Lấy danh sách sản phẩm (có hỗ trợ search)
+    // GET /api/products
     if (req.method === "GET") {
         try {
             const { search } = req.query;
@@ -32,7 +48,6 @@ module.exports = async (req, res) => {
             let sql = "SELECT * FROM products";
             let params = [];
 
-            // Nếu có search keyword, thêm điều kiện tìm kiếm
             if (search) {
                 sql += " WHERE name ILIKE $1";
                 params.push(`%${search}%`);
@@ -52,7 +67,7 @@ module.exports = async (req, res) => {
         }
     }
 
-    // POST /api/products - Tạo sản phẩm mới
+    // POST /api/products
     if (req.method === "POST") {
         try {
             const { name, price, stock } = req.body;
@@ -78,7 +93,7 @@ module.exports = async (req, res) => {
         }
     }
 
-    // PUT /api/products - Cập nhật sản phẩm
+    // PUT /api/products
     if (req.method === "PUT") {
         try {
             const { id, name, price, stock } = req.body;
@@ -110,7 +125,7 @@ module.exports = async (req, res) => {
         }
     }
 
-    // DELETE /api/products - Xóa sản phẩm
+    // DELETE /api/products
     if (req.method === "DELETE") {
         try {
             const { id } = req.query;
