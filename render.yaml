@@ -2,6 +2,7 @@ services:
     - type: web
       name: salespro-manager
       env: python
+      runtime: python-3.11
       buildCommand: pip install -r requirements.txt
       startCommand: gunicorn -k eventlet -w 1 app:app
       envVars:
