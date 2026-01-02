@@ -1,0 +1,456 @@
+{% extends "base.html" %} {% block title %}Chi tiết Đơn hàng #{{ sale.sale_code
+}} - SalesPro Manager{% endblock %} {% block header %}
+<div class="flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-semibold text-gray-900">Chi tiết Đơn hàng</h2>
+        <p class="mt-1 text-sm text-gray-600">
+            Mã đơn hàng: {{ sale.sale_code }}
+        </p>
+    </div>
+    <div class="flex space-x-3">
+        <button
+            onclick="printInvoice()"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+        >
+            <i class="fas fa-print mr-2"></i> In hóa đơn
+        </button>
+        <a
+            href="{{ url_for('main.sales') }}"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+        >
+            <i class="fas fa-arrow-left mr-2"></i> Quay lại
+        </a>
+    </div>
+</div>
+{% endblock %} {% block content %}
+<div class="py-6">
+    <div class="max-w-4xl mx-auto">
+        <!-- Invoice Header -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">
+                        HÓA ĐƠN BÁN HÀNG
+                    </h1>
+                    <p class="text-gray-600 mt-2">
+                        Mã đơn hàng:
+                        <span class="font-semibold">{{ sale.sale_code }}</span>
+                    </p>
+                    <p class="text-gray-600">
+                        Ngày bán:
+                        <span class="font-semibold"
+                            >{{ sale.sale_date.strftime('%d/%m/%Y %H:%M')
+                            }}</span
+                        >
+                    </p>
+                </div>
+                <div class="text-right">
+                    <div class="text-lg font-bold text-blue-600">
+                        SALESPRO MANAGER
+                    </div>
+                    <p class="text-gray-600 text-sm mt-1">
+                        Hệ thống quản lý bán hàng chuyên nghiệp
+                    </p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-900 mb-2">
+                        Thông tin bán hàng
+                    </h3>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm">
+                            <span class="font-medium">Nhân viên:</span> {{
+                            sale.user.username }}
+                        </p>
+                        <p class="text-sm">
+                            <span class="font-medium"
+                                >Phương thức thanh toán:</span
+                            >
+                            {% if sale.payment_method == 'cash' %}Tiền mặt {%
+                            elif sale.payment_method == 'credit_card' %}Thẻ tín
+                            dụng {% elif sale.payment_method == 'bank_transfer'
+                            %}Chuyển khoản {% else %}{{ sale.payment_method }}{%
+                            endif %}
+                        </p>
+                        <p class="text-sm">
+                            <span class="font-medium">Trạng thái:</span>
+                            <span
+                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if sale.status == 'completed' %}bg-green-100 text-green-800 {% elif sale.status == 'pending' %}bg-yellow-100 text-yellow-800 {% else %}bg-red-100 text-red-800{% endif %}"
+                            >
+                                {% if sale.status == 'completed' %}Hoàn thành {%
+                                elif sale.status == 'pending' %}Đang xử lý {%
+                                elif sale.status == 'cancelled' %}Đã hủy {% else
+                                %}{{ sale.status }}{% endif %}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-medium text-gray-900 mb-2">
+                        Thông tin khách hàng
+                    </h3>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        {% if sale.customer %}
+                        <p class="text-sm">
+                            <span class="font-medium">Tên:</span> {{
+                            sale.customer.name }}
+                        </p>
+                        <p class="text-sm">
+                            <span class="font-medium">SĐT:</span> {{
+                            sale.customer.phone or 'N/A' }}
+                        </p>
+                        <p class="text-sm">
+                            <span class="font-medium">Email:</span> {{
+                            sale.customer.email or 'N/A' }}
+                        </p>
+                        <p class="text-sm">
+                            <span class="font-medium">Địa chỉ:</span> {{
+                            sale.customer.address or 'N/A' }}
+                        </p>
+                        {% else %}
+                        <p class="text-sm text-gray-500">Khách lẻ</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">
+                Chi tiết sản phẩm
+            </h3>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                STT
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                Sản phẩm
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                Đơn giá
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                Số lượng
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                Thành tiền
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for item in sale.sale_items %}
+                        <tr>
+                            <td
+                                class="px-4 py-3 whitespace-nowrap text-sm text-gray-900"
+                            >
+                                {{ loop.index }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="font-medium text-gray-900">
+                                    {{ item.product.name }}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    SKU: {{ item.product.sku }}
+                                </div>
+                            </td>
+                            <td
+                                class="px-4 py-3 whitespace-nowrap text-sm text-gray-900"
+                            >
+                                {{ "{:,.0f}".format(item.unit_price) }} VNĐ
+                            </td>
+                            <td
+                                class="px-4 py-3 whitespace-nowrap text-sm text-gray-900"
+                            >
+                                {{ item.quantity }}
+                            </td>
+                            <td
+                                class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900"
+                            >
+                                {{ "{:,.0f}".format(item.total_price) }} VNĐ
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="mt-8 border-t pt-6">
+                <div class="max-w-md ml-auto">
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Tổng tiền hàng:</span>
+                            <span class="font-medium">
+                                {% set subtotal = namespace(value=0) %} {% for
+                                item in sale.sale_items %} {% set subtotal.value
+                                = subtotal.value + item.total_price %} {% endfor
+                                %} {{ "{:,.0f}".format(subtotal.value) }} VNĐ
+                            </span>
+                        </div>
+
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Giảm giá:</span>
+                            <span class="font-medium text-red-600">
+                                - {{ "{:,.0f}".format(sale.discount) }} VNĐ
+                            </span>
+                        </div>
+
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Thuế (VAT):</span>
+                            <span class="font-medium">
+                                + {{ "{:,.0f}".format(sale.tax) }} VNĐ
+                            </span>
+                        </div>
+
+                        <div class="border-t pt-3">
+                            <div class="flex justify-between text-lg font-bold">
+                                <span>Tổng thanh toán:</span>
+                                <span class="text-blue-600"
+                                    >{{ "{:,.0f}".format(sale.total_amount) }}
+                                    VNĐ</span
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes and Actions -->
+        <div class="bg-white shadow rounded-lg p-6">
+            {% if sale.notes %}
+            <div class="mb-6">
+                <h3 class="text-sm font-medium text-gray-900 mb-2">
+                    Ghi chú đơn hàng
+                </h3>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-700">{{ sale.notes }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-500">
+                    <p>Đơn hàng được tạo bởi: {{ sale.user.username }}</p>
+                    <p>
+                        Vào lúc: {{ sale.sale_date.strftime('%d/%m/%Y %H:%M:%S')
+                        }}
+                    </p>
+                </div>
+
+                <div class="flex space-x-3">
+                    {% if sale.status != 'cancelled' and current_user.role in
+                    ['admin', 'manager'] %}
+                    <button
+                        onclick="cancelOrder()"
+                        class="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50"
+                    >
+                        <i class="fas fa-times-circle mr-2"></i> Hủy đơn hàng
+                    </button>
+                    {% endif %} {% if sale.status == 'pending' %}
+                    <button
+                        onclick="completeOrder()"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+                    >
+                        <i class="fas fa-check-circle mr-2"></i> Xác nhận hoàn
+                        thành
+                    </button>
+                    {% endif %}
+
+                    <a
+                        href="{{ url_for('main.new_sale') }}?duplicate={{ sale.id }}"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                        <i class="fas fa-copy mr-2"></i> Sao chép đơn hàng
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function printInvoice() {
+        const printWindow = window.open("", "_blank");
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Hóa đơn {{ sale.sale_code }}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    .header { text-align: center; margin-bottom: 30px; }
+                    .header h1 { margin: 0; color: #1e40af; }
+                    .info { display: flex; justify-content: space-between; margin-bottom: 20px; }
+                    .section { margin-bottom: 20px; }
+                    .section-title { font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f3f4f6; }
+                    .total { text-align: right; font-weight: bold; font-size: 1.2em; }
+                    .footer { margin-top: 30px; text-align: center; font-style: italic; color: #666; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>SALESPRO MANAGER</h1>
+                    <p>Hệ thống quản lý bán hàng chuyên nghiệp</p>
+                    <h2>HÓA ĐƠN BÁN HÀNG</h2>
+                    <p>Mã đơn hàng: {{ sale.sale_code }}</p>
+                </div>
+                
+                <div class="info">
+                    <div>
+                        <p><strong>Ngày bán:</strong> {{ sale.sale_date.strftime('%d/%m/%Y %H:%M') }}</p>
+                        <p><strong>Nhân viên:</strong> {{ sale.user.username }}</p>
+                        <p><strong>Phương thức thanh toán:</strong> 
+                            {% if sale.payment_method == 'cash' %}Tiền mặt
+                            {% elif sale.payment_method == 'credit_card' %}Thẻ tín dụng
+                            {% elif sale.payment_method == 'bank_transfer' %}Chuyển khoản
+                            {% else %}{{ sale.payment_method }}{% endif %}
+                        </p>
+                    </div>
+                    <div>
+                        <p><strong>Khách hàng:</strong> {% if sale.customer %}{{ sale.customer.name }}{% else %}Khách lẻ{% endif %}</p>
+                        {% if sale.customer and sale.customer.phone %}
+                        <p><strong>SĐT:</strong> {{ sale.customer.phone }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Chi tiết sản phẩm</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Sản phẩm</th>
+                                <th>Đơn giá</th>
+                                <th>Số lượng</th>
+                                <th>Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in sale.sale_items %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ item.product.name }} (SKU: {{ item.product.sku }})</td>
+                                <td>{{ "{:,.0f}".format(item.unit_price) }} VNĐ</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ "{:,.0f}".format(item.total_price) }} VNĐ</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Tổng hợp thanh toán</div>
+                    <table>
+                        <tr>
+                            <td>Tổng tiền hàng:</td>
+                            <td>
+                                {% set subtotal = namespace(value=0) %}
+                                {% for item in sale.sale_items %}
+                                    {% set subtotal.value = subtotal.value + item.total_price %}
+                                {% endfor %}
+                                {{ "{:,.0f}".format(subtotal.value) }} VNĐ
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Giảm giá:</td>
+                            <td>- {{ "{:,.0f}".format(sale.discount) }} VNĐ</td>
+                        </tr>
+                        <tr>
+                            <td>Thuế (VAT):</td>
+                            <td>+ {{ "{:,.0f}".format(sale.tax) }} VNĐ</td>
+                        </tr>
+                        <tr style="background-color: #f3f4f6; font-weight: bold;">
+                            <td>TỔNG THANH TOÁN:</td>
+                            <td>{{ "{:,.0f}".format(sale.total_amount) }} VNĐ</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                {% if sale.notes %}
+                <div class="section">
+                    <div class="section-title">Ghi chú</div>
+                    <p>{{ sale.notes }}</p>
+                </div>
+                {% endif %}
+                
+                <div class="footer">
+                    <p>Cảm ơn quý khách đã mua hàng!</p>
+                    <p>Hóa đơn được tạo tự động từ hệ thống SalesPro Manager</p>
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+    }
+
+    function cancelOrder() {
+        if (confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) {
+            fetch(`/api/sale/{{ sale.id }}/cancel`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        alert("Đơn hàng đã được hủy!");
+                        location.reload();
+                    } else {
+                        alert("Có lỗi xảy ra: " + data.message);
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    alert("Có lỗi xảy ra khi hủy đơn hàng");
+                });
+        }
+    }
+
+    function completeOrder() {
+        fetch(`/api/sale/{{ sale.id }}/complete`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    alert("Đơn hàng đã được xác nhận hoàn thành!");
+                    location.reload();
+                } else {
+                    alert("Có lỗi xảy ra: " + data.message);
+                }
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+                alert("Có lỗi xảy ra khi xác nhận đơn hàng");
+            });
+    }
+</script>
+{% endblock %}

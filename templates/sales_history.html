@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+
+{% block title %}Lịch sử Bán hàng - SalesPro Manager{% endblock %}
+
+{% block header %}
+<div class="flex justify-between items-center">
+    <h2 class="text-2xl font-semibold text-gray-900">Lịch sử Bán hàng</h2>
+    <a href="{{ url_for('main.sales') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+        <i class="fas fa-arrow-left mr-2"></i> Quay lại
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="py-6">
+    <!-- Period Selector -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Chọn khoảng thời gian</h3>
+        
+        <form method="GET" class="flex flex-col md:flex-row items-end gap-4">
+            <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Xem theo</label>
+                    <select name="period" onchange="this.form.submit()" 
+                            class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="today" {% if period == 'today' %}selected{% endif %}>Hôm nay</option>
+                        <option value="week" {% if period == 'week' %}selected{% endif %}>Tuần này</option>
+                        <option value="month" {% if period == 'month' %}selected{% endif %}>Tháng này</option>
+                        <option value="year" {% if period == 'year' %}selected{% endif %}>Năm nay</option>
+                        <option value="custom" {% if period == 'custom' %}selected{% endif %}>Tùy chọn</option>
+                    </select>
+                </div>
+                
+                {% if period == 'custom' %}
+                <div>
+                    <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">Từ ngày</label>
+                    <input type="date" id="start_date" name="start_date" value="{{ start_date }}"
+                           class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="end_date" class="block text-sm font-medium text-gray-700 mb-2">Đến ngày</label>
+                    <input type="date" id="end_date" name="end_date" value="{{ end_date }}"
+                           class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="flex space-x-2">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                    <i class="fas fa-filter mr-2"></i> Lọc
+                </button>
+                <a href="{{ url_for('main.sales_history') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="fas fa-redo mr-2"></i> Làm mới
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Statistics Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                    <i class="fas fa-money-bill-wave text-white text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Tổng doanh thu</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ "{:,.0f}".format(total_sales) }} VNĐ</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                    <i class="fas fa-shopping-cart text-white text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Số đơn hàng</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ total_transactions }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+                    <i class="fas fa-boxes text-white text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Số sản phẩm bán ra</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ total_items }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-purple-500 rounded-md p-3">
+                    <i class="fas fa-chart-line text-white text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Đơn hàng trung bình</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ "{:,.0f}".format(average_sale) }} VNĐ</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sales Chart -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Biểu đồ doanh thu</h3>
+        <div class="h-80">
+            <canvas id="salesHistoryChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Sales Table -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Chi tiết đơn hàng</h3>
+            <p class="mt-1 text-sm text-gray-600">
+                {% if period == 'today' %}
+                Hôm nay: {{ start_date.strftime('%d/%m/%Y') }}
+                {% elif period == 'week' %}
+                Tuần từ {{ start_date.strftime('%d/%m/%Y') }} đến {{ end_date.strftime('%d/%m/%Y') }}
+                {% elif period == 'month' %}
+                Tháng {{ start_date.strftime('%m/%Y') }}
+                {% elif period == 'year' %}
+                Năm {{ start_date.strftime('%Y') }}
+                {% else %}
+                Từ {{ start_date.strftime('%d/%m/%Y') }} đến {{ end_date.strftime('%d/%m/%Y') }}
+                {% endif %}
+            </p>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Mã đơn hàng
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Khách hàng
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Thời gian
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Sản phẩm
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Tổng tiền
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Trạng thái
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for sale in sales %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a href="{{ url_for('main.sale_detail', id=sale.id) }}" class="text-blue-600 hover:text-blue-900 font-medium">
+                                {{ sale.sale_code }}
+                            </a>
+                            <div class="text-xs text-gray-500">NV: {{ sale.user.username }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if sale.customer %}
+                            <div class="text-sm text-gray-900">{{ sale.customer.name }}</div>
+                            <div class="text-xs text-gray-500">{{ sale.customer.phone or '' }}</div>
+                            {% else %}
+                            <span class="text-sm text-gray-500">Khách lẻ</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ sale.sale_date.strftime('%d/%m/%Y %H:%M') }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">
+                                {% set item_count = sale.sale_items|length %}
+                                {{ item_count }} sản phẩm
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                {% for item in sale.sale_items[:2] %}
+                                    {{ item.product.name }}{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                                {% if item_count > 2 %}...{% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ "{:,.0f}".format(sale.total_amount) }} VNĐ
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                {% if sale.status == 'completed' %}bg-green-100 text-green-800
+                                {% elif sale.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {% if sale.status == 'completed' %}Hoàn thành
+                                {% elif sale.status == 'pending' %}Đang xử lý
+                                {% elif sale.status == 'cancelled' %}Đã hủy
+                                {% else %}{{ sale.status }}{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if not sales %}
+        <div class="text-center py-12">
+            <i class="fas fa-chart-line text-gray-400 text-4xl mb-4"></i>
+            <p class="text-gray-500">Không có dữ liệu bán hàng trong khoảng thời gian này</p>
+        </div>
+        {% endif %}
+        
+        <!-- Export Section -->
+        <div class="bg-gray-50 px-4 py-3 border-t border-gray-200">
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-700">
+                    Hiển thị <span class="font-medium">{{ sales|length }}</span> đơn hàng
+                </div>
+                <div>
+                    <button onclick="exportHistory()" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                        <i class="fas fa-file-export mr-2"></i> Xuất báo cáo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Additional Analysis -->
+    <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Top sản phẩm bán chạy</h3>
+            <div class="space-y-3">
+                {% set top_products = {} %}
+                {% for sale in sales %}
+                    {% for item in sale.sale_items %}
+                        {% if item.product.name in top_products %}
+                            {% set _ = top_products.update({item.product.name: top_products[item.product.name] + item.quantity}) %}
+                        {% else %}
+                            {% set _ = top_products.update({item.product.name: item.quantity}) %}
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+                
+                {% set sorted_products = top_products.items()|sort(attribute='1', reverse=true) %}
+                {% for product_name, quantity in sorted_products[:5] %}
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-900 truncate">{{ product_name }}</span>
+                    <div class="flex items-center">
+                        <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                            <div class="bg-blue-600 h-2 rounded-full" 
+                                 style="width: {{ (quantity / (sorted_products[0][1] if sorted_products else 1)) * 100 }}%"></div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">{{ quantity }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Phương thức thanh toán</h3>
+            <div class="space-y-3">
+                {% set payment_stats = {} %}
+                {% for sale in sales %}
+                    {% set method = sale.payment_method or 'cash' %}
+                    {% if method in payment_stats %}
+                        {% set _ = payment_stats.update({method: payment_stats[method] + 1}) %}
+                    {% else %}
+                        {% set _ = payment_stats.update({method: 1}) %}
+                    {% endif %}
+                {% endfor %}
+                
+                {% for method, count in payment_stats.items() %}
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-900">
+                        {% if method == 'cash' %}Tiền mặt
+                        {% elif method == 'credit_card' %}Thẻ tín dụng
+                        {% elif method == 'bank_transfer' %}Chuyển khoản
+                        {% else %}{{ method }}{% endif %}
+                    </span>
+                    <div class="flex items-center">
+                        <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                            <div class="bg-green-600 h-2 rounded-full" 
+                                 style="width: {{ (count / sales|length) * 100 if sales else 0 }}%"></div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">{{ count }} ({{ "%.1f"|format((count / sales|length) * 100 if sales else 0) }}%)</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Prepare chart data
+        const salesByDay = {};
+        {% for sale in sales %}
+            const date = '{{ sale.sale_date.strftime("%Y-%m-%d") }}';
+            if (salesByDay[date]) {
+                salesByDay[date] += {{ sale.total_amount }};
+            } else {
+                salesByDay[date] = {{ sale.total_amount }};
+            }
+        {% endfor %}
+        
+        // Sort dates
+        const dates = Object.keys(salesByDay).sort();
+        const amounts = dates.map(date => salesByDay[date]);
+        
+        // Create chart
+        const ctx = document.getElementById('salesHistoryChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dates.map(date => {
+                    const d = new Date(date);
+                    return d.toLocaleDateString('vi-VN');
+                }),
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: amounts,
+                    backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                    borderColor: 'rgb(59, 130, 246)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return new Intl.NumberFormat('vi-VN').format(value) + ' VNĐ';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Update chart when period changes
+        document.querySelector('select[name="period"]').addEventListener('change', function() {
+            if (this.value === 'custom') {
+                // Show date inputs
+                setTimeout(() => {
+                    document.getElementById('start_date').style.display = 'block';
+                    document.getElementById('end_date').style.display = 'block';
+                }, 100);
+            }
+        });
+    });
+    
+    function exportHistory() {
+        const period = document.querySelector('select[name="period"]').value;
+        let url = '/api/sales/export/history?period=' + period;
+        
+        if (period === 'custom') {
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+            if (startDate) url += '&start_date=' + startDate;
+            if (endDate) url += '&end_date=' + endDate;
+        }
+        
+        window.open(url, '_blank');
+    }
+</script>
+{% endblock %}

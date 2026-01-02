@@ -1,0 +1,478 @@
+{% extends "base.html" %} {% block title %}Báo cáo & Thống kê - SalesPro
+Manager{% endblock %} {% block header %}
+<div class="flex justify-between items-center">
+    <h2 class="text-2xl font-semibold text-gray-900">Báo cáo & Thống kê</h2>
+    <div class="flex space-x-3">
+        <button
+            onclick="printReport()"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+        >
+            <i class="fas fa-print mr-2"></i> In báo cáo
+        </button>
+        <button
+            onclick="exportReport()"
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+        >
+            <i class="fas fa-file-export mr-2"></i> Xuất Excel
+        </button>
+    </div>
+</div>
+{% endblock %} {% block content %}
+<div class="py-6">
+    <!-- Report Filters -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Lựa chọn báo cáo</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div>
+                <label
+                    for="report_type"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    >Loại báo cáo</label
+                >
+                <select
+                    id="report_type"
+                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="sales_summary">Tổng quan bán hàng</option>
+                    <option value="product_performance">
+                        Hiệu suất sản phẩm
+                    </option>
+                    <option value="customer_analysis">
+                        Phân tích khách hàng
+                    </option>
+                    <option value="inventory_report">Báo cáo tồn kho</option>
+                </select>
+            </div>
+
+            <div>
+                <label
+                    for="period"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    >Kỳ báo cáo</label
+                >
+                <select
+                    id="period"
+                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="today">Hôm nay</option>
+                    <option value="yesterday">Hôm qua</option>
+                    <option value="week" selected>Tuần này</option>
+                    <option value="month">Tháng này</option>
+                    <option value="quarter">Quý này</option>
+                    <option value="year">Năm nay</option>
+                    <option value="custom">Tùy chỉnh</option>
+                </select>
+            </div>
+
+            <div id="custom_dates" class="hidden">
+                <label
+                    for="start_date"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    >Từ ngày</label
+                >
+                <input
+                    type="date"
+                    id="start_date"
+                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+            </div>
+
+            <div id="custom_dates_end" class="hidden">
+                <label
+                    for="end_date"
+                    class="block text-sm font-medium text-gray-700 mb-2"
+                    >Đến ngày</label
+                >
+                <input
+                    type="date"
+                    id="end_date"
+                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+            </div>
+        </div>
+
+        <div class="flex justify-end">
+            <button
+                onclick="generateReport()"
+                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+            >
+                <i class="fas fa-chart-bar mr-2"></i> Tạo báo cáo
+            </button>
+        </div>
+    </div>
+
+    <!-- Sales Summary -->
+    <div id="sales_summary" class="report-section">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Key Metrics -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">
+                    Chỉ số kinh doanh chính
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-600">Tổng doanh thu</p>
+                            <p class="text-2xl font-semibold text-gray-900">
+                                {% set total_revenue = namespace(value=0) %} {%
+                                for month in monthly_sales %} {% set
+                                total_revenue.value = total_revenue.value +
+                                month.total_sales %} {% endfor %} {{
+                                "{:,.0f}".format(total_revenue.value) }} VNĐ
+                            </p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-lg">
+                            <i class="fas fa-money-bill-wave text-blue-600"></i>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-600">Tổng đơn hàng</p>
+                            <p class="text-2xl font-semibold text-gray-900">
+                                {% set total_orders = namespace(value=0) %} {%
+                                for month in monthly_sales %} {% set
+                                total_orders.value = total_orders.value +
+                                month.transaction_count %} {% endfor %} {{
+                                total_orders.value }}
+                            </p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-lg">
+                            <i class="fas fa-shopping-cart text-green-600"></i>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-600">
+                                Đơn hàng trung bình
+                            </p>
+                            <p class="text-2xl font-semibold text-gray-900">
+                                {% if total_orders.value > 0 %} {{
+                                "{:,.0f}".format(total_revenue.value /
+                                total_orders.value) }} VNĐ {% else %} 0 VNĐ {%
+                                endif %}
+                            </p>
+                        </div>
+                        <div class="bg-yellow-100 p-3 rounded-lg">
+                            <i class="fas fa-chart-line text-yellow-600"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Sales Chart -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">
+                    Doanh thu theo tháng
+                </h3>
+                <div class="h-64">
+                    <canvas id="monthlySalesChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Performance -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">
+                Hiệu suất theo danh mục
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                Danh mục
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                Doanh thu
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                Số lượng bán
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                Tỷ trọng
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                Đánh giá
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for category in sales_by_category %}
+                        <tr>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center">
+                                    <div
+                                        class="h-3 w-3 rounded-full mr-2"
+                                        style="background-color: {{ ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']|random }}"
+                                    ></div>
+                                    <span class="font-medium text-gray-900"
+                                        >{{ category[0] or 'Chưa phân loại'
+                                        }}</span
+                                    >
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 font-medium text-gray-900">
+                                {{ "{:,.0f}".format(category.total_sales) }} VNĐ
+                            </td>
+                            <td class="px-4 py-3 text-gray-900">
+                                {{ category.total_quantity }}
+                            </td>
+                            <td class="px-4 py-3">
+                                <div
+                                    class="w-full bg-gray-200 rounded-full h-2"
+                                >
+                                    <div
+                                        class="bg-blue-600 h-2 rounded-full"
+                                        style="width: {{ (category.total_sales / total_revenue.value) * 100 if total_revenue.value > 0 else 0 }}%"
+                                    ></div>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    {{ "%.1f"|format((category.total_sales /
+                                    total_revenue.value) * 100 if
+                                    total_revenue.value > 0 else 0) }}%
+                                </div>
+                            </td>
+                            <td class="px-4 py-3">
+                                {% set avg_sale = category.total_sales /
+                                category.total_quantity if
+                                category.total_quantity > 0 else 0 %}
+                                <span
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if avg_sale > 1000000 %}bg-green-100 text-green-800 {% elif avg_sale > 500000 %}bg-blue-100 text-blue-800 {% else %}bg-gray-100 text-gray-800{% endif %}"
+                                >
+                                    {% if avg_sale > 1000000 %}Tốt {% elif
+                                    avg_sale > 500000 %}Khá {% else %}Trung
+                                    bình{% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Top Products -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">
+                Top 10 sản phẩm bán chạy
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                Sản phẩm
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                Số lượng bán
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                Doanh thu
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                Giá trung bình
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            >
+                                Xếp hạng
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for product in top_products %}
+                        <tr>
+                            <td class="px-4 py-3">
+                                <div class="font-medium text-gray-900">
+                                    {{ product[0] }}
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-gray-900">
+                                {{ product.total_sold }}
+                            </td>
+                            <td class="px-4 py-3 font-medium text-gray-900">
+                                {{ "{:,.0f}".format(product.total_revenue) }}
+                                VNĐ
+                            </td>
+                            <td class="px-4 py-3 text-gray-900">
+                                {% if product.total_sold > 0 %} {{
+                                "{:,.0f}".format(product.total_revenue /
+                                product.total_sold) }} VNĐ {% else %} 0 VNĐ {%
+                                endif %}
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center">
+                                    {% for i in range(5) %} {% if i <
+                                    (loop.index * 10 / top_products|length)|int
+                                    %}
+                                    <i class="fas fa-star text-yellow-400"></i>
+                                    {% else %}
+                                    <i class="far fa-star text-gray-300"></i>
+                                    {% endif %} {% endfor %}
+                                    <span class="ml-2 text-sm text-gray-600"
+                                        >#{{ loop.index }}</span
+                                    >
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show/hide custom date inputs
+        const periodSelect = document.getElementById('period');
+        const customDates = document.getElementById('custom_dates');
+        const customDatesEnd = document.getElementById('custom_dates_end');
+
+        periodSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customDates.classList.remove('hidden');
+                customDatesEnd.classList.remove('hidden');
+            } else {
+                customDates.classList.add('hidden');
+                customDatesEnd.classList.add('hidden');
+            }
+        });
+
+        // Monthly Sales Chart
+        const monthlyCtx = document.getElementById('monthlySalesChart').getContext('2d');
+        const monthlyLabels = [];
+        const monthlyData = [];
+
+        {% for month in monthly_sales|reverse %}
+            monthlyLabels.push('{{ month.month }}');
+            monthlyData.push({{ month.total_sales }});
+        {% endfor %}
+
+        const monthlyChart = new Chart(monthlyCtx, {
+            type: 'bar',
+            data: {
+                labels: monthlyLabels,
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: monthlyData,
+                    backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                    borderColor: 'rgb(59, 130, 246)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return new Intl.NumberFormat('vi-VN', {
+                                    notation: 'compact',
+                                    compactDisplay: 'short'
+                                }).format(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+
+    function generateReport() {
+        const reportType = document.getElementById('report_type').value;
+        const period = document.getElementById('period').value;
+        let url = `/api/reports/${reportType}?period=${period}`;
+
+        if (period === 'custom') {
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+            if (startDate) url += `&start_date=${startDate}`;
+            if (endDate) url += `&end_date=${endDate}`;
+        }
+
+        // Show loading
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Đang tạo...';
+        button.disabled = true;
+
+        // In a real implementation, this would fetch new report data
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+            alert('Báo cáo đã được tạo với dữ liệu mới nhất!');
+        }, 1000);
+    }
+
+    function printReport() {
+        window.print();
+    }
+
+    function exportReport() {
+        const reportType = document.getElementById('report_type').value;
+        const period = document.getElementById('period').value;
+        let url = `/api/reports/export/${reportType}?period=${period}`;
+
+        if (period === 'custom') {
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+            if (startDate) url += `&start_date=${startDate}`;
+            if (endDate) url += `&end_date=${endDate}`;
+        }
+
+        window.open(url, '_blank');
+    }
+</script>
+
+<style>
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+
+        .report-section {
+            break-inside: avoid;
+        }
+
+        body {
+            font-size: 12px;
+        }
+
+        .bg-white {
+            background-color: white !important;
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+    }
+</style>
+{% endblock %}

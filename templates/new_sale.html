@@ -1,0 +1,628 @@
+{% extends "base.html" %} {% block title %}Tạo Đơn hàng Mới - SalesPro Manager{%
+endblock %} {% block header %}
+<div class="flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-semibold text-gray-900">Tạo Đơn hàng Mới</h2>
+        <p class="mt-1 text-sm text-gray-600">
+            Thêm sản phẩm vào giỏ hàng và tạo đơn hàng
+        </p>
+    </div>
+    <a
+        href="{{ url_for('main.sales') }}"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+    >
+        <i class="fas fa-arrow-left mr-2"></i> Quay lại
+    </a>
+</div>
+{% endblock %} {% block content %}
+<div class="py-6">
+    <div class="max-w-7xl mx-auto">
+        <form
+            method="POST"
+            action="{{ url_for('main.new_sale') }}"
+            id="sale-form"
+        >
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column: Products -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white shadow rounded-lg p-6 mb-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">
+                            Sản phẩm
+                        </h3>
+
+                        <!-- Product Search -->
+                        <div class="mb-6">
+                            <label
+                                for="product-search"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                                Tìm sản phẩm
+                            </label>
+                            <div class="relative">
+                                <div
+                                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                                >
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </div>
+                                <input
+                                    type="text"
+                                    id="product-search"
+                                    class="pl-10 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Nhập tên sản phẩm hoặc SKU..."
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Products Grid -->
+                        <div
+                            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"
+                            id="products-grid"
+                        >
+                            {% for product in products %}
+                            <div
+                                class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition cursor-pointer"
+                                onclick="addToCart({{ product.id }}, '{{ product.name|escapejs }}', {{ product.price }}, {{ product.stock_quantity }})"
+                            >
+                                <div class="flex items-start">
+                                    <div
+                                        class="flex-shrink-0 h-12 w-12 bg-gray-200 rounded-md flex items-center justify-center mr-3"
+                                    >
+                                        {% if product.image_url %}
+                                        <img
+                                            src="{{ product.image_url }}"
+                                            alt="{{ product.name }}"
+                                            class="h-12 w-12 object-cover rounded-md"
+                                        />
+                                        {% else %}
+                                        <i class="fas fa-box text-gray-400"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">
+                                            {{ product.name }}
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            {{ product.sku }}
+                                        </div>
+                                        <div class="font-medium text-blue-600">
+                                            {{ "{:,.0f}".format(product.price)
+                                            }} VNĐ
+                                        </div>
+                                        <div
+                                            class="text-xs {% if product.stock_quantity <= product.min_stock %}text-red-600{% else %}text-gray-500{% endif %}"
+                                        >
+                                            Còn {{ product.stock_quantity }}
+                                            trong kho
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Selected Products Table -->
+                        <div class="mt-8">
+                            <h4 class="text-md font-medium text-gray-900 mb-3">
+                                Sản phẩm đã chọn
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table
+                                    class="min-w-full divide-y divide-gray-200"
+                                >
+                                    <thead>
+                                        <tr>
+                                            <th
+                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                            >
+                                                Sản phẩm
+                                            </th>
+                                            <th
+                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                            >
+                                                Số lượng
+                                            </th>
+                                            <th
+                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                            >
+                                                Đơn giá
+                                            </th>
+                                            <th
+                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                            >
+                                                Thành tiền
+                                            </th>
+                                            <th
+                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                            ></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody
+                                        id="sale-items"
+                                        class="divide-y divide-gray-200"
+                                    >
+                                        <!-- Items will be added here dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="empty-cart" class="text-center py-8">
+                                <i
+                                    class="fas fa-shopping-cart text-gray-300 text-4xl mb-3"
+                                ></i>
+                                <p class="text-gray-500">
+                                    Chưa có sản phẩm nào. Hãy chọn sản phẩm từ
+                                    danh sách bên trên.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Order Summary -->
+                <div class="lg:col-span-1">
+                    <!-- Customer Information -->
+                    <div class="bg-white shadow rounded-lg p-6 mb-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">
+                            Thông tin khách hàng
+                        </h3>
+
+                        <div class="mb-4">
+                            <label
+                                for="customer_id"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                                Chọn khách hàng
+                            </label>
+                            <select
+                                id="customer_id"
+                                name="customer_id"
+                                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="">Khách lẻ</option>
+                                {% for customer in customers %}
+                                <option value="{{ customer.id }}">
+                                    {{ customer.name }} - {{ customer.phone or
+                                    '' }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="text-center">
+                            <a
+                                href="{{ url_for('main.add_customer') }}"
+                                class="text-blue-600 hover:text-blue-800 text-sm"
+                            >
+                                <i class="fas fa-plus mr-1"></i> Thêm khách hàng
+                                mới
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Order Summary -->
+                    <div class="bg-white shadow rounded-lg p-6 mb-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">
+                            Tổng hợp đơn hàng
+                        </h3>
+
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600"
+                                    >Tổng tiền hàng:</span
+                                >
+                                <span id="subtotal" class="font-medium"
+                                    >0 VNĐ</span
+                                >
+                            </div>
+
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Giảm giá:</span>
+                                <div class="flex items-center">
+                                    <input
+                                        type="number"
+                                        id="discount"
+                                        name="discount"
+                                        min="0"
+                                        step="0.01"
+                                        class="w-24 px-2 py-1 border border-gray-300 rounded-md text-right"
+                                        value="0"
+                                    />
+                                    <span class="ml-1">VNĐ</span>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Thuế (VAT):</span>
+                                <div class="flex items-center">
+                                    <input
+                                        type="number"
+                                        id="tax"
+                                        name="tax"
+                                        min="0"
+                                        step="0.01"
+                                        class="w-24 px-2 py-1 border border-gray-300 rounded-md text-right"
+                                        value="0"
+                                    />
+                                    <span class="ml-1">VNĐ</span>
+                                </div>
+                            </div>
+
+                            <div class="border-t pt-3 mt-3">
+                                <div
+                                    class="flex justify-between text-lg font-bold"
+                                >
+                                    <span>Tổng thanh toán:</span>
+                                    <span id="total">0 VNĐ</span>
+                                </div>
+                                <input
+                                    type="hidden"
+                                    id="total_amount"
+                                    name="total_amount"
+                                    value="0"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Information -->
+                    <div class="bg-white shadow rounded-lg p-6 mb-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">
+                            Thanh toán
+                        </h3>
+
+                        <div class="mb-4">
+                            <label
+                                for="payment_method"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                                Phương thức thanh toán
+                            </label>
+                            <select
+                                id="payment_method"
+                                name="payment_method"
+                                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="cash">Tiền mặt</option>
+                                <option value="credit_card">
+                                    Thẻ tín dụng
+                                </option>
+                                <option value="bank_transfer">
+                                    Chuyển khoản
+                                </option>
+                                <option value="momo">Ví MoMo</option>
+                                <option value="zalopay">ZaloPay</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label
+                                for="notes"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                                Ghi chú
+                            </label>
+                            <textarea
+                                id="notes"
+                                name="notes"
+                                rows="3"
+                                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Ghi chú cho đơn hàng..."
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="bg-white shadow rounded-lg p-6">
+                        <div class="flex space-x-3">
+                            <button
+                                type="button"
+                                onclick="clearCart()"
+                                class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                            >
+                                <i class="fas fa-trash mr-2"></i> Xóa giỏ hàng
+                            </button>
+                            <button
+                                type="submit"
+                                id="create-order-btn"
+                                class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled
+                            >
+                                <i class="fas fa-check-circle mr-2"></i> Tạo đơn
+                                hàng
+                            </button>
+                        </div>
+
+                        <div class="mt-4 text-center">
+                            <a
+                                href="{{ url_for('main.sales') }}"
+                                class="text-sm text-gray-600 hover:text-gray-900"
+                            >
+                                Hủy bỏ và quay lại
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden input for items data -->
+            <input type="hidden" id="items-input" name="items" value="[]" />
+        </form>
+    </div>
+</div>
+
+<script>
+    // Cart state
+    let cart = [];
+
+    // Add product to cart
+    function addToCart(productId, productName, price, stock) {
+        // Check if product already in cart
+        const existingItem = cart.find((item) => item.product_id === productId);
+
+        if (existingItem) {
+            if (existingItem.quantity < stock) {
+                existingItem.quantity += 1;
+                existingItem.total_price =
+                    existingItem.quantity * existingItem.unit_price;
+                updateCartItem(existingItem);
+            } else {
+                alert("Không đủ số lượng trong kho!");
+                return;
+            }
+        } else {
+            if (stock > 0) {
+                const newItem = {
+                    product_id: productId,
+                    name: productName,
+                    quantity: 1,
+                    unit_price: price,
+                    total_price: price,
+                };
+                cart.push(newItem);
+                addCartItemRow(newItem);
+            } else {
+                alert("Sản phẩm đã hết hàng!");
+                return;
+            }
+        }
+
+        updateCartDisplay();
+        updateOrderSummary();
+    }
+
+    // Add cart item row to table
+    function addCartItemRow(item) {
+        const saleItems = document.getElementById("sale-items");
+        const emptyCart = document.getElementById("empty-cart");
+
+        // Hide empty cart message
+        if (emptyCart) {
+            emptyCart.style.display = "none";
+        }
+
+        // Create row
+        const row = document.createElement("tr");
+        row.id = `cart-item-${item.product_id}`;
+        row.innerHTML = `
+            <td class="px-4 py-3">
+                <div class="font-medium text-gray-900">${item.name}</div>
+            </td>
+            <td class="px-4 py-3">
+                <div class="flex items-center">
+                    <button onclick="updateQuantity(${item.product_id}, -1)" 
+                            class="w-6 h-6 flex items-center justify-center border border-gray-300 rounded-l-md bg-gray-100 hover:bg-gray-200">
+                        <i class="fas fa-minus text-xs"></i>
+                    </button>
+                    <input type="number" min="1" value="${item.quantity}" 
+                           onchange="updateQuantityInput(${
+                               item.product_id
+                           }, this.value)"
+                           class="w-12 h-6 border-t border-b border-gray-300 text-center">
+                    <button onclick="updateQuantity(${item.product_id}, 1)" 
+                            class="w-6 h-6 flex items-center justify-center border border-gray-300 rounded-r-md bg-gray-100 hover:bg-gray-200">
+                        <i class="fas fa-plus text-xs"></i>
+                    </button>
+                </div>
+            </td>
+            <td class="px-4 py-3">
+                <input type="number" min="0" step="0.01" value="${
+                    item.unit_price
+                }" 
+                       onchange="updatePrice(${item.product_id}, this.value)"
+                       class="w-24 px-2 py-1 border border-gray-300 rounded-md">
+            </td>
+            <td class="px-4 py-3 font-medium" id="item-total-${
+                item.product_id
+            }">
+                ${formatCurrency(item.total_price)}
+            </td>
+            <td class="px-4 py-3">
+                <button onclick="removeFromCart(${item.product_id})" 
+                        class="text-red-600 hover:text-red-900">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        saleItems.appendChild(row);
+    }
+
+    // Update cart item row
+    function updateCartItem(item) {
+        const row = document.getElementById(`cart-item-${item.product_id}`);
+        if (row) {
+            row.querySelector('input[type="number"]').value = item.quantity;
+            const totalCell = document.getElementById(
+                `item-total-${item.product_id}`
+            );
+            if (totalCell) {
+                totalCell.textContent = formatCurrency(item.total_price);
+            }
+        }
+    }
+
+    // Update quantity with buttons
+    function updateQuantity(productId, change) {
+        const item = cart.find((item) => item.product_id === productId);
+        if (item) {
+            const newQuantity = item.quantity + change;
+            if (newQuantity >= 1) {
+                item.quantity = newQuantity;
+                item.total_price = item.quantity * item.unit_price;
+                updateCartItem(item);
+                updateOrderSummary();
+            }
+        }
+    }
+
+    // Update quantity with input
+    function updateQuantityInput(productId, value) {
+        const item = cart.find((item) => item.product_id === productId);
+        if (item) {
+            const newQuantity = parseInt(value) || 1;
+            if (newQuantity >= 1) {
+                item.quantity = newQuantity;
+                item.total_price = item.quantity * item.unit_price;
+                updateCartItem(item);
+                updateOrderSummary();
+            }
+        }
+    }
+
+    // Update price
+    function updatePrice(productId, value) {
+        const item = cart.find((item) => item.product_id === productId);
+        if (item) {
+            const newPrice = parseFloat(value) || 0;
+            if (newPrice >= 0) {
+                item.unit_price = newPrice;
+                item.total_price = item.quantity * item.unit_price;
+                updateCartItem(item);
+                updateOrderSummary();
+            }
+        }
+    }
+
+    // Remove item from cart
+    function removeFromCart(productId) {
+        cart = cart.filter((item) => item.product_id !== productId);
+        const row = document.getElementById(`cart-item-${productId}`);
+        if (row) {
+            row.remove();
+        }
+        updateCartDisplay();
+        updateOrderSummary();
+    }
+
+    // Clear entire cart
+    function clearCart() {
+        if (
+            cart.length === 0 ||
+            confirm("Bạn có chắc chắn muốn xóa tất cả sản phẩm trong giỏ hàng?")
+        ) {
+            cart = [];
+            document.getElementById("sale-items").innerHTML = "";
+            updateCartDisplay();
+            updateOrderSummary();
+        }
+    }
+
+    // Update cart display
+    function updateCartDisplay() {
+        const emptyCart = document.getElementById("empty-cart");
+        if (emptyCart) {
+            emptyCart.style.display = cart.length === 0 ? "block" : "none";
+        }
+
+        // Update create order button
+        const createBtn = document.getElementById("create-order-btn");
+        if (createBtn) {
+            createBtn.disabled = cart.length === 0;
+        }
+    }
+
+    // Update order summary
+    function updateOrderSummary() {
+        // Calculate subtotal
+        const subtotal = cart.reduce((sum, item) => sum + item.total_price, 0);
+        document.getElementById("subtotal").textContent =
+            formatCurrency(subtotal);
+
+        // Get discount and tax
+        const discount =
+            parseFloat(document.getElementById("discount").value) || 0;
+        const tax = parseFloat(document.getElementById("tax").value) || 0;
+
+        // Calculate total
+        const total = subtotal - discount + tax;
+        document.getElementById("total").textContent = formatCurrency(total);
+        document.getElementById("total_amount").value = total;
+
+        // Update hidden items input
+        document.getElementById("items-input").value = JSON.stringify(cart);
+    }
+
+    // Format currency
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat("vi-VN").format(amount) + " VNĐ";
+    }
+
+    // Product search functionality
+    document
+        .getElementById("product-search")
+        .addEventListener("input", function (e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const productCards = document.querySelectorAll(
+                "#products-grid > div"
+            );
+
+            productCards.forEach((card) => {
+                const productName = card
+                    .querySelector(".font-medium")
+                    .textContent.toLowerCase();
+                const sku = card
+                    .querySelector(".text-sm.text-gray-500")
+                    .textContent.toLowerCase();
+
+                if (
+                    productName.includes(searchTerm) ||
+                    sku.includes(searchTerm)
+                ) {
+                    card.style.display = "block";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        });
+
+    // Initialize
+    document.addEventListener("DOMContentLoaded", function () {
+        // Add event listeners for discount and tax
+        document
+            .getElementById("discount")
+            .addEventListener("input", updateOrderSummary);
+        document
+            .getElementById("tax")
+            .addEventListener("input", updateOrderSummary);
+
+        // Initialize cart display
+        updateCartDisplay();
+        updateOrderSummary();
+
+        // Form submission
+        document
+            .getElementById("sale-form")
+            .addEventListener("submit", function (e) {
+                if (cart.length === 0) {
+                    e.preventDefault();
+                    alert("Vui lòng thêm ít nhất một sản phẩm vào giỏ hàng!");
+                    return false;
+                }
+
+                // Show loading
+                const submitBtn = document.getElementById("create-order-btn");
+                submitBtn.innerHTML =
+                    '<i class="fas fa-spinner fa-spin mr-2"></i> Đang xử lý...';
+                submitBtn.disabled = true;
+            });
+    });
+</script>
+{% endblock %}

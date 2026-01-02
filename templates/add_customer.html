@@ -1,0 +1,425 @@
+{% extends "base.html" %} {% block title %}Thêm Khách hàng - SalesPro Manager{%
+endblock %} {% block header %}
+<div class="flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-semibold text-gray-900">
+            Thêm Khách hàng Mới
+        </h2>
+        <p class="mt-1 text-sm text-gray-600">
+            Thêm thông tin khách hàng vào hệ thống
+        </p>
+    </div>
+    <a
+        href="{{ url_for('main.customers') }}"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+    >
+        <i class="fas fa-arrow-left mr-2"></i> Quay lại
+    </a>
+</div>
+{% endblock %} {% block content %}
+<div class="py-6">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white shadow rounded-lg">
+            <form
+                method="POST"
+                action="{{ url_for('main.add_customer') }}"
+                class="p-6"
+            >
+                <div class="space-y-6">
+                    <!-- Basic Information -->
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">
+                            Thông tin cơ bản
+                        </h3>
+
+                        <div class="mb-4">
+                            <label
+                                for="name"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                                Họ tên *
+                            </label>
+                            <input
+                                type="text"
+                                id="name"
+                                name="name"
+                                required
+                                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Nhập họ tên đầy đủ"
+                            />
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    for="email"
+                                    class="block text-sm font-medium text-gray-700 mb-2"
+                                >
+                                    Email
+                                </label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="email@example.com"
+                                />
+                            </div>
+
+                            <div>
+                                <label
+                                    for="phone"
+                                    class="block text-sm font-medium text-gray-700 mb-2"
+                                >
+                                    Số điện thoại
+                                </label>
+                                <input
+                                    type="tel"
+                                    id="phone"
+                                    name="phone"
+                                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="0987654321"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Address Information -->
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">
+                            Địa chỉ
+                        </h3>
+
+                        <div class="mb-4">
+                            <label
+                                for="address"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                                Địa chỉ
+                            </label>
+                            <textarea
+                                id="address"
+                                name="address"
+                                rows="3"
+                                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Customer Type -->
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">
+                            Phân loại khách hàng
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <input
+                                    type="radio"
+                                    id="type_retail"
+                                    name="customer_type"
+                                    value="retail"
+                                    class="sr-only"
+                                    checked
+                                />
+                                <label
+                                    for="type_retail"
+                                    class="relative flex flex-col p-4 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 customer-type-label"
+                                >
+                                    <div class="flex items-center">
+                                        <div
+                                            class="h-6 w-6 border border-gray-300 rounded-full flex items-center justify-center mr-3"
+                                        >
+                                            <div
+                                                class="h-3 w-3 rounded-full bg-blue-600"
+                                            ></div>
+                                        </div>
+                                        <span
+                                            class="text-sm font-medium text-gray-900"
+                                            >Khách lẻ</span
+                                        >
+                                    </div>
+                                    <p class="mt-2 text-xs text-gray-500">
+                                        Khách hàng mua lẻ, số lượng ít
+                                    </p>
+                                </label>
+                            </div>
+
+                            <div>
+                                <input
+                                    type="radio"
+                                    id="type_wholesale"
+                                    name="customer_type"
+                                    value="wholesale"
+                                    class="sr-only"
+                                />
+                                <label
+                                    for="type_wholesale"
+                                    class="relative flex flex-col p-4 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 customer-type-label"
+                                >
+                                    <div class="flex items-center">
+                                        <div
+                                            class="h-6 w-6 border border-gray-300 rounded-full flex items-center justify-center mr-3"
+                                        >
+                                            <div
+                                                class="h-3 w-3 rounded-full bg-transparent"
+                                            ></div>
+                                        </div>
+                                        <span
+                                            class="text-sm font-medium text-gray-900"
+                                            >Khách sỉ</span
+                                        >
+                                    </div>
+                                    <p class="mt-2 text-xs text-gray-500">
+                                        Mua số lượng lớn, thường xuyên
+                                    </p>
+                                </label>
+                            </div>
+
+                            <div>
+                                <input
+                                    type="radio"
+                                    id="type_corporate"
+                                    name="customer_type"
+                                    value="corporate"
+                                    class="sr-only"
+                                />
+                                <label
+                                    for="type_corporate"
+                                    class="relative flex flex-col p-4 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 customer-type-label"
+                                >
+                                    <div class="flex items-center">
+                                        <div
+                                            class="h-6 w-6 border border-gray-300 rounded-full flex items-center justify-center mr-3"
+                                        >
+                                            <div
+                                                class="h-3 w-3 rounded-full bg-transparent"
+                                            ></div>
+                                        </div>
+                                        <span
+                                            class="text-sm font-medium text-gray-900"
+                                            >Doanh nghiệp</span
+                                        >
+                                    </div>
+                                    <p class="mt-2 text-xs text-gray-500">
+                                        Khách hàng doanh nghiệp, hợp đồng
+                                    </p>
+                                </label>
+                            </div>
+                        </div>
+
+                        <script>
+                            document.addEventListener(
+                                "DOMContentLoaded",
+                                function () {
+                                    const labels = document.querySelectorAll(
+                                        ".customer-type-label"
+                                    );
+                                    labels.forEach((label) => {
+                                        label.addEventListener(
+                                            "click",
+                                            function () {
+                                                labels.forEach((l) => {
+                                                    l.classList.remove(
+                                                        "border-blue-500",
+                                                        "bg-blue-50"
+                                                    );
+                                                    l.querySelector(
+                                                        ".h-3.w-3"
+                                                    ).classList.add(
+                                                        "bg-transparent"
+                                                    );
+                                                    l.querySelector(
+                                                        ".h-3.w-3"
+                                                    ).classList.remove(
+                                                        "bg-blue-600"
+                                                    );
+                                                });
+
+                                                this.classList.add(
+                                                    "border-blue-500",
+                                                    "bg-blue-50"
+                                                );
+                                                this.querySelector(
+                                                    ".h-3.w-3"
+                                                ).classList.remove(
+                                                    "bg-transparent"
+                                                );
+                                                this.querySelector(
+                                                    ".h-3.w-3"
+                                                ).classList.add("bg-blue-600");
+                                            }
+                                        );
+                                    });
+
+                                    // Trigger click on retail by default
+                                    document.getElementById(
+                                        "type_retail"
+                                    ).checked = true;
+                                    document
+                                        .querySelector(
+                                            'label[for="type_retail"]'
+                                        )
+                                        .click();
+                                }
+                            );
+                        </script>
+                    </div>
+
+                    <!-- Notes -->
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">
+                            Ghi chú thêm
+                        </h3>
+
+                        <div class="mb-4">
+                            <label
+                                for="notes"
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                                Ghi chú
+                            </label>
+                            <textarea
+                                id="notes"
+                                name="notes"
+                                rows="3"
+                                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Ghi chú về khách hàng..."
+                            ></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end space-x-3">
+                    <a
+                        href="{{ url_for('main.customers') }}"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                        Hủy bỏ
+                    </a>
+                    <button
+                        type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                    >
+                        <i class="fas fa-save mr-2"></i> Lưu khách hàng
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Quick Tips -->
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-lightbulb text-blue-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">
+                        Mẹo nhập thông tin khách hàng
+                    </h3>
+                    <div class="mt-2 text-sm text-blue-700">
+                        <ul class="list-disc pl-5 space-y-1">
+                            <li>
+                                Nhập đầy đủ thông tin liên hệ để dễ dàng chăm
+                                sóc khách hàng
+                            </li>
+                            <li>
+                                Phân loại khách hàng giúp áp dụng chính sách giá
+                                và ưu đãi phù hợp
+                            </li>
+                            <li>
+                                Thêm ghi chú về sở thích, thói quen mua hàng để
+                                phục vụ tốt hơn
+                            </li>
+                            <li>
+                                Khách hàng thân thiết sẽ nhận được ưu đãi đặc
+                                biệt
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Phone number formatting
+        const phoneInput = document.getElementById("phone");
+        phoneInput.addEventListener("input", function (e) {
+            let value = e.target.value.replace(/\D/g, "");
+
+            // Format as Vietnamese phone number
+            if (value.length > 0) {
+                if (value.startsWith("0")) {
+                    if (value.length <= 4) {
+                        value = value;
+                    } else if (value.length <= 7) {
+                        value = value.replace(/(\d{4})(\d+)/, "$1 $2");
+                    } else {
+                        value = value.replace(
+                            /(\d{4})(\d{3})(\d+)/,
+                            "$1 $2 $3"
+                        );
+                    }
+                } else if (value.startsWith("84")) {
+                    if (value.length <= 3) {
+                        value = value;
+                    } else if (value.length <= 6) {
+                        value = value.replace(/(\d{3})(\d+)/, "$1 $2");
+                    } else {
+                        value = value.replace(
+                            /(\d{3})(\d{3})(\d+)/,
+                            "$1 $2 $3"
+                        );
+                    }
+                }
+            }
+
+            e.target.value = value;
+        });
+
+        // Form validation
+        const form = document.querySelector("form");
+        form.addEventListener("submit", function (e) {
+            const name = document.getElementById("name").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const phone = document.getElementById("phone").value.trim();
+
+            if (name.length === 0) {
+                e.preventDefault();
+                alert("Vui lòng nhập họ tên khách hàng");
+                document.getElementById("name").focus();
+                return false;
+            }
+
+            if (email && !isValidEmail(email)) {
+                e.preventDefault();
+                alert("Email không hợp lệ");
+                document.getElementById("email").focus();
+                return false;
+            }
+
+            if (phone && !isValidPhone(phone)) {
+                e.preventDefault();
+                alert("Số điện thoại không hợp lệ");
+                document.getElementById("phone").focus();
+                return false;
+            }
+        });
+
+        function isValidEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function isValidPhone(phone) {
+            const cleaned = phone.replace(/\s/g, "");
+            const re = /^(0[3-9][0-9]{8}|84[3-9][0-9]{8})$/;
+            return re.test(cleaned);
+        }
+    });
+</script>
+{% endblock %}

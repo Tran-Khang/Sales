@@ -1,0 +1,440 @@
+{% extends "base.html" %} {% block title %}Quản lý Bán hàng - SalesPro Manager{%
+endblock %} {% block header %}
+<div class="flex justify-between items-center">
+    <h2 class="text-2xl font-semibold text-gray-900">Quản lý Bán hàng</h2>
+    <a
+        href="{{ url_for('main.new_sale') }}"
+        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+    >
+        <i class="fas fa-plus mr-2"></i> Tạo đơn hàng mới
+    </a>
+</div>
+{% endblock %} {% block content %}
+<div class="py-6">
+    <!-- Filters and Stats -->
+    <div class="mb-6">
+        <div class="bg-white shadow rounded-lg p-4">
+            <form method="GET" class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1">
+                    <label
+                        for="search"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                        >Tìm kiếm</label
+                    >
+                    <input
+                        type="text"
+                        id="search"
+                        name="search"
+                        value="{{ search }}"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Mã đơn hàng, tên khách hàng..."
+                    />
+                </div>
+                <div>
+                    <label
+                        for="date_from"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                        >Từ ngày</label
+                    >
+                    <input
+                        type="date"
+                        id="date_from"
+                        name="date_from"
+                        value="{{ date_from }}"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                </div>
+                <div>
+                    <label
+                        for="date_to"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                        >Đến ngày</label
+                    >
+                    <input
+                        type="date"
+                        id="date_to"
+                        name="date_to"
+                        value="{{ date_to }}"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                </div>
+                <div class="flex items-end">
+                    <button
+                        type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                    >
+                        <i class="fas fa-search mr-2"></i> Tìm kiếm
+                    </button>
+                    <a
+                        href="{{ url_for('main.sales') }}"
+                        class="ml-2 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                        <i class="fas fa-redo mr-2"></i> Làm mới
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sales Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">
+                        Tổng doanh thu
+                    </p>
+                    <p class="text-2xl font-semibold text-gray-900">
+                        {% set total_revenue = namespace(value=0) %} {% for sale
+                        in sales %} {% set total_revenue.value =
+                        total_revenue.value + sale.total_amount %} {% endfor %}
+                        {{ "{:,.0f}".format(total_revenue.value) }} VNĐ
+                    </p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-lg">
+                    <i class="fas fa-money-bill-wave text-blue-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">
+                        Tổng đơn hàng
+                    </p>
+                    <p class="text-2xl font-semibold text-gray-900">
+                        {{ sales|length }}
+                    </p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-lg">
+                    <i class="fas fa-shopping-cart text-green-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">
+                        Đơn hàng trung bình
+                    </p>
+                    <p class="text-2xl font-semibold text-gray-900">
+                        {% if sales|length > 0 %} {{
+                        "{:,.0f}".format(total_revenue.value / sales|length) }}
+                        VNĐ {% else %} 0 VNĐ {% endif %}
+                    </p>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-lg">
+                    <i class="fas fa-chart-line text-yellow-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">
+                        Tổng sản phẩm bán ra
+                    </p>
+                    <p class="text-2xl font-semibold text-gray-900">
+                        {% set total_items = namespace(value=0) %} {% for sale
+                        in sales %} {% for item in sale.sale_items %} {% set
+                        total_items.value = total_items.value + item.quantity %}
+                        {% endfor %} {% endfor %} {{ total_items.value }}
+                    </p>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-lg">
+                    <i class="fas fa-boxes text-purple-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Table -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                            Mã đơn hàng
+                        </th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                            Khách hàng
+                        </th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                            Thời gian
+                        </th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                            Tổng tiền
+                        </th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                            Thanh toán
+                        </th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                            Trạng thái
+                        </th>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                            Thao tác
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for sale in sales %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">
+                                {{ sale.sale_code }}
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                NV: {{ sale.user.username }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if sale.customer %}
+                            <div class="text-sm text-gray-900">
+                                {{ sale.customer.name }}
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                {{ sale.customer.phone or 'Không có SĐT' }}
+                            </div>
+                            {% else %}
+                            <span class="text-sm text-gray-500">Khách lẻ</span>
+                            {% endif %}
+                        </td>
+                        <td
+                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                            {{ sale.sale_date.strftime('%d/%m/%Y %H:%M') }}
+                        </td>
+                        <td
+                            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                        >
+                            {{ "{:,.0f}".format(sale.total_amount) }} VNĐ
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span
+                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if sale.payment_method == 'cash' %}bg-green-100 text-green-800 {% elif sale.payment_method == 'credit_card' %}bg-blue-100 text-blue-800 {% else %}bg-gray-100 text-gray-800{% endif %}"
+                            >
+                                {% if sale.payment_method == 'cash' %}Tiền mặt
+                                {% elif sale.payment_method == 'credit_card'
+                                %}Thẻ tín dụng {% elif sale.payment_method ==
+                                'bank_transfer' %}Chuyển khoản {% else %}{{
+                                sale.payment_method or 'Không rõ' }}{% endif %}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span
+                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if sale.status == 'completed' %}bg-green-100 text-green-800 {% elif sale.status == 'pending' %}bg-yellow-100 text-yellow-800 {% else %}bg-red-100 text-red-800{% endif %}"
+                            >
+                                {% if sale.status == 'completed' %}Hoàn thành {%
+                                elif sale.status == 'pending' %}Đang xử lý {%
+                                elif sale.status == 'cancelled' %}Đã hủy {% else
+                                %}{{ sale.status }}{% endif %}
+                            </span>
+                        </td>
+                        <td
+                            class="px-6 py-4 whitespace-nowrap text-sm font-medium"
+                        >
+                            <a
+                                href="{{ url_for('main.sale_detail', id=sale.id) }}"
+                                class="text-blue-600 hover:text-blue-900 mr-3"
+                                title="Xem chi tiết"
+                            >
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a
+                                href="#"
+                                onclick="printInvoice({{ sale.id }})"
+                                class="text-green-600 hover:text-green-900 mr-3"
+                                title="In hóa đơn"
+                            >
+                                <i class="fas fa-print"></i>
+                            </a>
+                            {% if sale.status != 'cancelled' and
+                            current_user.role in ['admin', 'manager'] %}
+                            <a
+                                href="#"
+                                onclick="cancelSale({{ sale.id }})"
+                                class="text-red-600 hover:text-red-900"
+                                title="Hủy đơn hàng"
+                            >
+                                <i class="fas fa-times-circle"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if not sales %}
+        <div class="text-center py-12">
+            <i class="fas fa-shopping-cart text-gray-400 text-4xl mb-4"></i>
+            <p class="text-gray-500">
+                Chưa có đơn hàng nào. Hãy tạo đơn hàng mới!
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- Pagination -->
+        {% if sales|length > 0 %}
+        <div class="bg-gray-50 px-4 py-3 border-t border-gray-200 sm:px-6">
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-gray-700">
+                    Hiển thị
+                    <span class="font-medium">{{ sales|length }}</span> đơn hàng
+                </div>
+                <div class="flex space-x-2">
+                    <button
+                        class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                        Trước
+                    </button>
+                    <button
+                        class="px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600"
+                    >
+                        1
+                    </button>
+                    <button
+                        class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                    >
+                        Sau
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mt-6 bg-white shadow rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Thao tác nhanh</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <a
+                href="{{ url_for('main.new_sale') }}"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md text-center"
+            >
+                <i class="fas fa-cash-register mr-2"></i>Tạo đơn hàng mới
+            </a>
+            <a
+                href="{{ url_for('main.sales_history') }}"
+                class="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-md text-center"
+            >
+                <i class="fas fa-history mr-2"></i>Xem lịch sử bán hàng
+            </a>
+            <button
+                onclick="exportSales()"
+                class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-md text-center"
+            >
+                <i class="fas fa-file-export mr-2"></i>Xuất báo cáo
+            </button>
+            <button
+                onclick="printAllInvoices()"
+                class="bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-3 px-4 rounded-md text-center"
+            >
+                <i class="fas fa-print mr-2"></i>In tất cả hóa đơn
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function printInvoice(saleId) {
+        window.open(`/sale/${saleId}/print`, "_blank");
+    }
+
+    function cancelSale(saleId) {
+        if (confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) {
+            fetch(`/api/sale/${saleId}/cancel`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        alert("Đơn hàng đã được hủy!");
+                        location.reload();
+                    } else {
+                        alert("Có lỗi xảy ra: " + data.message);
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    alert("Có lỗi xảy ra khi hủy đơn hàng");
+                });
+        }
+    }
+
+    function exportSales() {
+        const search = document.getElementById("search").value;
+        const dateFrom = document.getElementById("date_from").value;
+        const dateTo = document.getElementById("date_to").value;
+
+        let url = "/api/sales/export?";
+        if (search) url += `search=${encodeURIComponent(search)}&`;
+        if (dateFrom) url += `date_from=${dateFrom}&`;
+        if (dateTo) url += `date_to=${dateTo}`;
+
+        window.open(url, "_blank");
+    }
+
+    function printAllInvoices() {
+        if (confirm("Bạn có muốn in tất cả hóa đơn trong danh sách này?")) {
+            // This would need server-side implementation
+            alert("Chức năng đang được phát triển");
+        }
+    }
+
+    // Real-time updates
+    document.addEventListener("DOMContentLoaded", function () {
+        const socket = io();
+
+        socket.on("sale_update", function (data) {
+            // Show notification
+            const notification = document.createElement("div");
+            notification.className =
+                "fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50";
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-bell mr-2"></i>
+                    <span>Đơn hàng mới: ${
+                        data.sale_code
+                    } - ${new Intl.NumberFormat("vi-VN").format(
+                data.total_amount
+            )} VNĐ</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            // Remove notification after 5 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+
+            // Reload page after 10 seconds to show new sale
+            setTimeout(() => {
+                location.reload();
+            }, 10000);
+        });
+    });
+</script>
+{% endblock %}
