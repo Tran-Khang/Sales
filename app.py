@@ -95,5 +95,5 @@ with app.app_context():
         db.session.add(admin)
         db.session.commit()
 
-if __name__ == '__main__':
-    socketio.run(app, debug=True)
+# if __name__ == '__main__':
+#     socketio.run(app, debug=True)

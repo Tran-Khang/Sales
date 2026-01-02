@@ -3,7 +3,8 @@ services:
     name: salespro-manager
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: gunicorn -k eventlet -w 1 app:app
+    
     envVars:
       - key: DATABASE_URL
         value: postgresql://neondb_owner:MAT_KHAU_THAT@ep-proud-thunder-a4q1y1fz-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require
