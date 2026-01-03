@@ -210,4 +210,31 @@ def export_report(report_type):
 # ===== REPORTS PAGE =====
 @main.route('/reports')
 @login_required
-def reports(): return render_template('reports.html')
+def reports():
+    # Dữ liệu mẫu cho template test
+    monthly_sales = [
+        {'month': 'Tháng 1', 'total_sales': 12000000, 'transaction_count': 15},
+        {'month': 'Tháng 2', 'total_sales': 15000000, 'transaction_count': 20},
+        {'month': 'Tháng 3', 'total_sales': 18000000, 'transaction_count': 25},
+    ]
+
+    sales_by_category = [
+        type('Category', (), {'0':'Điện thoại','total_sales':5000000,'total_quantity':10}),
+        type('Category', (), {'0':'Laptop','total_sales':12000000,'total_quantity':8}),
+        type('Category', (), {'0':'Phụ kiện','total_sales':3000000,'total_quantity':15}),
+    ]
+
+    top_products = [
+        type('Product', (), {'0':'iPhone 14','total_sold':5,'total_revenue':25000000}),
+        type('Product', (), {'0':'MacBook Pro','total_sold':3,'total_revenue':36000000}),
+        type('Product', (), {'0':'Tai nghe AirPods','total_sold':7,'total_revenue':7000000}),
+    ]
+
+    return render_template(
+        'reports.html',
+        monthly_sales=monthly_sales,
+        sales_by_category=sales_by_category,
+        top_products=top_products
+    )
+
+
