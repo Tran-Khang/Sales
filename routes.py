@@ -467,6 +467,7 @@ def export_report(report_type):
         'filename': f'report_{report_type}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
     })
 
+
 @main_bp.route('/api/inventory/export')
 @login_required
 def export_inventory():
@@ -509,4 +510,10 @@ def customer_detail(id):
                           total_spent=total_spent,
                           avg_order_value=avg_order_value,
                           recent_sales=recent_sales)
+@main_bp.route('/reports')
+@login_required
+def reports():
+    # Có thể render template báo cáo tổng hợp
+    return render_template('reports.html')
+
 

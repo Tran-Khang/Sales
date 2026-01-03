@@ -11,6 +11,8 @@ load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
+app.config['DEBUG'] = True  # bật debug
+app.config['ENV'] = 'development'  # môi trường dev
 
 app.config["SECRET_KEY"] = os.environ.get(
     "SECRET_KEY", "dev-secret-key-change-in-production"
